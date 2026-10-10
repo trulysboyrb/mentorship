@@ -1,8 +1,9 @@
 import Link from "next/link";
+import LegalLinks from "@/components/LegalLinks";
 
 export default function LandingPage() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
+    <main className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
       <h1 className="text-6xl font-black leading-[0.95] tracking-tight sm:text-7xl">
         ApexTrade
         <br />
@@ -28,6 +29,7 @@ export default function LandingPage() {
           Sign up
         </Link>
       </div>
+      <LegalLinks className="absolute bottom-6" />
     </main>
   );
 }

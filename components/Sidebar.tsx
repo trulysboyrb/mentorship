@@ -1,5 +1,6 @@
 import Link from "next/link";
 import SignOutButton from "@/components/SignOutButton";
+import LegalLinks from "@/components/LegalLinks";
 
 type Lesson = { id: string; position: number; title: string };
 type Module = { id: string; position: number; title: string; lessons: Lesson[] };
@@ -109,12 +110,16 @@ export default function Sidebar({
         </p>
         <div className="flex items-center gap-4">
           <SignOutButton />
+          <Link href="/profile" className="text-xs text-muted hover:text-white">
+            Profile
+          </Link>
           {isAdmin && (
             <Link href="/admin" className="text-xs text-accent hover:underline">
               Admin
             </Link>
           )}
         </div>
+        <LegalLinks className="!justify-start pt-2" />
       </div>
     </div>
   );

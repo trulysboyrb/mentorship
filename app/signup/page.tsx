@@ -176,7 +176,15 @@ export default function SignupPage() {
             <Link href="/terms" target="_blank" className="text-accent hover:underline">
               terms and risk disclaimer
             </Link>
-            . I understand trading involves risk of loss.
+            ,{" "}
+            <Link href="/privacy" target="_blank" className="text-accent hover:underline">
+              privacy policy
+            </Link>{" "}
+            and{" "}
+            <Link href="/refund" target="_blank" className="text-accent hover:underline">
+              refund policy
+            </Link>
+            . I understand trading involves risk of loss and I am 18 or older.
           </span>
         </label>
 

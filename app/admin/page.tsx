@@ -34,6 +34,14 @@ export default async function AdminPage() {
   (doneRows ?? []).forEach((r) => {
     completed[r.user_id] = (completed[r.user_id] ?? 0) + 1;
   });
+  const { data: certRows } = await supabase
+    .from("certificates")
+    .select("id, user_id, title, file_path")
+    .order("issued_at", { ascending: false });
+  const certificates: Record<string, { id: string; title: string; file_path: string }[]> = {};
+  (certRows ?? []).forEach((c) => {
+    (certificates[c.user_id] ??= []).push({ id: c.id, title: c.title, file_path: c.file_path });
+  });
   const { count: totalLessons } = await supabase
     .from("lessons")
     .select("id", { count: "exact", head: true });
@@ -55,7 +63,7 @@ export default async function AdminPage() {
       </div>
 
       <h2 className="mt-10 text-3xl font-black tracking-tight">Students</h2>
-      <AdminStudents students={students ?? []} completed={completed} totalLessons={totalLessons ?? 0} />
+      <AdminStudents students={students ?? []} completed={completed} totalLessons={totalLessons ?? 0} certificates={certificates} />
     </main>
   );
 }

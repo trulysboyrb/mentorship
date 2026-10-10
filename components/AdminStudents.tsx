@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 
 type Student = {
   id: string;
@@ -18,15 +19,18 @@ export default function AdminStudents({
   students,
   completed,
   totalLessons,
+  certificates,
 }: {
   students: Student[];
   completed: Record<string, number>;
   totalLessons: number;
+  certificates: Record<string, CertItem[]>;
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<"all" | "pending" | "cleared">("all");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [certFor, setCertFor] = useState<string | null>(null);
 
   const shown = students.filter((s) => filter === "all" || s.payment_status === filter);
   const clearedCount = students.filter((s) => s.payment_status === "cleared").length;
@@ -116,6 +120,16 @@ export default function AdminStudents({
                     {cleared ? `${completed[s.id] ?? 0} / ${totalLessons}` : "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setCertFor(s.id)}
+                      className="rounded-control border border-line px-4 py-1.5 text-xs font-extrabold tracking-wider text-white uppercase hover:border-accent"
+                    >
+                      Give Certificate
+                      {(certificates[s.id]?.length ?? 0) > 0 && (
+                        <span className="ml-2 text-accent">({certificates[s.id].length})</span>
+                      )}
+                    </button>
                     <button
                       disabled={busy === s.id}
                       onClick={() => setStatus(s, cleared ? "pending" : "cleared")}
@@ -127,6 +141,7 @@ export default function AdminStudents({
                     >
                       {cleared ? "Unclear" : "Clear"}
                     </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -141,6 +156,13 @@ export default function AdminStudents({
           </tbody>
         </table>
       </div>
+      {certFor && students.find((x) => x.id === certFor) && (
+        <CertificateModal
+          student={students.find((x) => x.id === certFor)!}
+          certificates={certificates[certFor] ?? []}
+          onClose={() => setCertFor(null)}
+        />
+      )}
     </>
   );
 }

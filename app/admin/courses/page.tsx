@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import SignOutButton from "@/components/SignOutButton";
+import AdminNav from "@/components/AdminNav";
 import CourseManager from "@/components/CourseManager";
 
 type Content = {
@@ -58,15 +57,7 @@ export default async function AdminCoursesPage() {
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-accent">ADMIN</h1>
-        <div className="flex items-center gap-5">
-          <Link href="/admin" className="text-xs text-muted hover:text-white">
-            Students
-          </Link>
-          <SignOutButton />
-        </div>
-      </div>
+      <AdminNav current="/admin/courses" />
 
       <h2 className="mt-10 text-3xl font-black tracking-tight">Courses</h2>
       <CourseManager modules={modules} />

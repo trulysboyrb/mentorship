@@ -113,7 +113,7 @@ export default function SignupPage() {
         <div>
           <label className={labelCls} htmlFor="whatsapp">WhatsApp number</label>
           <input id="whatsapp" type="tel" required className={inputCls}
-            placeholder="include country code, e.g. 220..." value={form.whatsapp}
+            placeholder="include country code, e.g. 220...8." value={form.whatsapp}
             onChange={(e) => set("whatsapp", e.target.value)} />
         </div>
         <div>
@@ -126,8 +126,8 @@ export default function SignupPage() {
           <legend className={labelCls}>How do you want to learn?</legend>
           <div className="grid grid-cols-2 gap-3">
             {[
-              ["online", "Online"],
-              ["in_person", "In person"],
+              ["online", "Online (D7,000.00 GMD)"],
+              ["in_person", "In person (D10,000.00 GMD)"],
             ].map(([value, label]) => (
               <label key={value}
                 className={`cursor-pointer rounded-control border px-4 py-3 text-center text-sm ${

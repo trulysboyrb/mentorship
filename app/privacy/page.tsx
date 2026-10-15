@@ -30,6 +30,20 @@ export default function PrivacyPage() {
             and completed, and how much of each video you have watched.
           </li>
           <li>
+            <strong>Lesson comments:</strong> questions and replies you post
+            under lessons. Other enrolled students and our staff can see them,
+            shown with your first name and last initial.
+          </li>
+          <li>
+            <strong>Certificates:</strong> certificates we issue to you, which
+            include your name.
+          </li>
+          <li>
+            <strong>Staff notes:</strong> private notes our team may keep about
+            your account, for example about payment or class arrangements.
+            Students cannot see these.
+          </li>
+          <li>
             <strong>Payment status:</strong> whether your payment has been
             confirmed. We record that it was confirmed, not your card or wallet
             details.

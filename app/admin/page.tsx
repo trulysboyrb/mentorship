@@ -1,7 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import SignOutButton from "@/components/SignOutButton";
+import AdminNav from "@/components/AdminNav";
 import AdminStudents from "@/components/AdminStudents";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 
@@ -20,50 +19,77 @@ export default async function AdminPage() {
   // Real protection is the database policy; this just sends non-admins away.
   if (me?.role !== "admin") redirect("/dashboard");
 
-  const { data: students } = await supabase
-    .from("profiles")
-    .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at")
-    .eq("role", "student")
-    .order("created_at", { ascending: false });
+  const [
+    { data: students },
+    { data: stats },
+    { data: certRows },
+    { data: noteRows },
+    { count: totalLessons },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at")
+      .eq("role", "student")
+      .order("created_at", { ascending: false }),
+    supabase.rpc("admin_student_stats"),
+    supabase
+      .from("certificates")
+      .select("id, user_id, title, file_path")
+      .order("issued_at", { ascending: false }),
+    supabase
+      .from("student_notes")
+      .select("id, student_id, body, author_name, created_at")
+      .order("created_at", { ascending: false }),
+    supabase.from("lessons").select("id", { count: "exact", head: true }),
+  ]);
 
-  const { data: doneRows } = await supabase
-    .from("lesson_progress")
-    .select("user_id")
-    .eq("completed", true);
   const completed: Record<string, number> = {};
-  (doneRows ?? []).forEach((r) => {
-    completed[r.user_id] = (completed[r.user_id] ?? 0) + 1;
+  const finished: Record<string, boolean> = {};
+  (
+    (stats ?? []) as {
+      user_id: string;
+      completed_count: number;
+      required_done: number;
+      required_total: number;
+    }[]
+  ).forEach((r) => {
+    completed[r.user_id] = r.completed_count;
+    finished[r.user_id] = r.required_total > 0 && r.required_done >= r.required_total;
   });
-  const { data: certRows } = await supabase
-    .from("certificates")
-    .select("id, user_id, title, file_path")
-    .order("issued_at", { ascending: false });
+
   const certificates: Record<string, { id: string; title: string; file_path: string }[]> = {};
   (certRows ?? []).forEach((c) => {
     (certificates[c.user_id] ??= []).push({ id: c.id, title: c.title, file_path: c.file_path });
   });
-  const { count: totalLessons } = await supabase
-    .from("lessons")
-    .select("id", { count: "exact", head: true });
+
+  const notes: Record<
+    string,
+    { id: string; body: string; author_name: string; created_at: string }[]
+  > = {};
+  (noteRows ?? []).forEach((n) => {
+    (notes[n.student_id] ??= []).push({
+      id: n.id,
+      body: n.body,
+      author_name: n.author_name,
+      created_at: n.created_at,
+    });
+  });
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <RealtimeRefresh />
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-accent">ADMIN</h1>
-        <div className="flex items-center gap-5">
-          <Link href="/admin/courses" className="text-xs text-accent hover:underline">
-            Manage courses
-          </Link>
-          <Link href="/dashboard" className="text-xs text-muted hover:text-white">
-            View student area
-          </Link>
-          <SignOutButton />
-        </div>
-      </div>
+      <RealtimeRefresh table="lesson_progress" filter="completed=eq.true" />
+      <AdminNav current="/admin" />
 
       <h2 className="mt-10 text-3xl font-black tracking-tight">Students</h2>
-      <AdminStudents students={students ?? []} completed={completed} totalLessons={totalLessons ?? 0} certificates={certificates} />
+      <AdminStudents
+        students={students ?? []}
+        completed={completed}
+        totalLessons={totalLessons ?? 0}
+        finished={finished}
+        certificates={certificates}
+        notes={notes}
+      />
     </main>
   );
 }

@@ -4,6 +4,8 @@ import DashboardShell from "@/components/DashboardShell";
 import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import ProgressVideo from "@/components/ProgressVideo";
+import Announcements from "@/components/Announcements";
+import LessonComments from "@/components/LessonComments";
 
 const RESOURCES = [
   { name: "TradingView", tag: "Charts", url: "https://www.tradingview.com" },
@@ -39,8 +41,8 @@ export default async function DashboardPage({
     .eq("id", user!.id)
     .single();
 
-  const cleared = profile?.payment_status === "cleared";
   const isAdmin = profile?.role === "admin";
+  const cleared = isAdmin || profile?.payment_status === "cleared";
 
   const [{ data: modulesRaw }, { data: unlockedRaw }, { data: progressRows }] =
     await Promise.all([
@@ -74,6 +76,23 @@ export default async function DashboardPage({
           .select("video_url, video_path, duration_seconds, notes")
           .eq("lesson_id", lesson.id)
           .maybeSingle()
+      : { data: null };
+
+  const { data: announcements } = cleared
+    ? await supabase
+        .from("announcements")
+        .select("id, title, body, created_at")
+        .order("created_at", { ascending: false })
+        .limit(3)
+    : { data: null };
+
+  const { data: comments } =
+    cleared && lesson && lessonUnlocked
+      ? await supabase
+          .from("lesson_comments")
+          .select("id, parent_id, user_id, author_name, is_staff, body, created_at")
+          .eq("lesson_id", lesson.id)
+          .order("created_at", { ascending: true })
       : { data: null };
 
   let videoSrc: string | null = content?.video_url ?? null;
@@ -111,9 +130,17 @@ export default async function DashboardPage({
       }
     >
       <RealtimeRefresh filter={`id=eq.${user!.id}`} />
+      {cleared && <RealtimeRefresh table="announcements" />}
+      {cleared && lesson && lessonUnlocked && (
+        <RealtimeRefresh table="lesson_comments" filter={`lesson_id=eq.${lesson.id}`} />
+      )}
 
       <div className="relative mx-auto max-w-4xl px-6 py-10">
         <h2 className="text-3xl font-black tracking-tight">{title}</h2>
+
+        {cleared && announcements && announcements.length > 0 && (
+          <Announcements items={announcements} />
+        )}
 
         <div className={`mt-6 space-y-6 ${cleared ? "" : "pointer-events-none blur-sm select-none"}`}>
           <div className="space-y-3">
@@ -160,6 +187,15 @@ export default async function DashboardPage({
               </ul>
             </div>
           </div>
+
+          {cleared && lesson && lessonUnlocked && (
+            <LessonComments
+              lessonId={lesson.id}
+              comments={comments ?? []}
+              userId={user!.id}
+              isAdmin={isAdmin}
+            />
+          )}
         </div>
 
         {!cleared && (

@@ -11,8 +11,8 @@ export default function LandingPage() {
       </h1>
 
       <p className="mt-6 max-w-md text-muted">
-        Learn modern trading and blockchain skills, structured into clear
-        modules.
+        Learn modern trading and scaling up skills, structured into clear
+        modules. to make you profitable in no time.
       </p>
 
       <div className="mt-10 flex gap-4">

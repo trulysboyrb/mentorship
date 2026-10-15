@@ -95,6 +95,11 @@ export default function TermsPage() {
           <li>Do not try to bypass the access controls, or access content you have not unlocked.</li>
           <li>Do not attempt to disrupt, scrape, or break into the site.</li>
           <li>Be respectful to staff and other students.</li>
+          <li>
+            Lesson comments are visible to other students and our staff. Do not post
+            spam, abuse, other people&apos;s private information, or promotions for
+            other services. We may delete comments and suspend accounts that do.
+          </li>
         </ul>
       </Section>
 

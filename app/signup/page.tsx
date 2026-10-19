@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
+import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
+import { normalizeReferralCode } from "@/lib/referral";
+
+type CodeState = "idle" | "checking" | "valid" | "invalid";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -18,7 +22,9 @@ export default function SignupPage() {
     learning_mode: "online",
     experience: "beginner",
     heard_from: "",
+    referral: "",
   });
+  const [codeState, setCodeState] = useState<CodeState>("idle");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
   const [checkEmail, setCheckEmail] = useState(false);
@@ -27,6 +33,30 @@ export default function SignupPage() {
   function set(field: string, value: string) {
     setForm((f) => ({ ...f, [field]: value }));
   }
+
+  async function checkCode(raw: string): Promise<CodeState> {
+    const code = normalizeReferralCode(raw);
+    if (!code) {
+      setCodeState("idle");
+      return "idle";
+    }
+    setCodeState("checking");
+    const { data, error } = await createClient().rpc("check_referral_code", { p_code: code });
+    const next: CodeState = !error && data === true ? "valid" : "invalid";
+    setCodeState(next);
+    return next;
+  }
+
+  // A friend's share link looks like /signup?ref=K7M2QX
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get("ref");
+    if (ref) {
+      const code = normalizeReferralCode(ref).slice(0, 12);
+      setForm((f) => ({ ...f, referral: code }));
+      checkCode(code);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,11 +72,21 @@ export default function SignupPage() {
     }
 
     setLoading(true);
-    const { email, password, ...meta } = form;
+
+    if (normalizeReferralCode(form.referral)) {
+      const state = codeState === "valid" ? "valid" : await checkCode(form.referral);
+      if (state !== "valid") {
+        setError("That referral code is not valid. Check it, or clear the box to continue without one.");
+        setLoading(false);
+        return;
+      }
+    }
+
+    const { email, password, referral, ...meta } = form;
     const { data, error } = await createClient().auth.signUp({
       email,
       password,
-      options: { data: meta },
+      options: { data: { ...meta, referral_code: normalizeReferralCode(referral) } },
     });
 
     if (error) {
@@ -90,6 +130,8 @@ export default function SignupPage() {
     );
   }
 
+  const referred = codeState === "valid";
+
   return (
     <AuthCard title="Create Account" subtitle="Join the academy">
       <form onSubmit={onSubmit} className="space-y-5">
@@ -113,7 +155,7 @@ export default function SignupPage() {
         <div>
           <label className={labelCls} htmlFor="whatsapp">WhatsApp number</label>
           <input id="whatsapp" type="tel" required className={inputCls}
-            placeholder="include country code, e.g. 220...8." value={form.whatsapp}
+            placeholder="include country code, e.g. 220..." value={form.whatsapp}
             onChange={(e) => set("whatsapp", e.target.value)} />
         </div>
         <div>
@@ -125,22 +167,32 @@ export default function SignupPage() {
         <fieldset>
           <legend className={labelCls}>How do you want to learn?</legend>
           <div className="grid grid-cols-2 gap-3">
-            {[
-              ["online", "Online (D7,000.00 GMD)"],
-              ["in_person", "In person (D10,000.00 GMD)"],
-            ].map(([value, label]) => (
-              <label key={value}
-                className={`cursor-pointer rounded-control border px-4 py-3 text-center text-sm ${
-                  form.learning_mode === value
-                    ? "border-accent text-white"
-                    : "border-line text-muted"
-                }`}>
-                <input type="radio" name="learning_mode" value={value} className="sr-only"
-                  checked={form.learning_mode === value}
-                  onChange={() => set("learning_mode", value)} />
-                {label}
-              </label>
-            ))}
+            {(["online", "in_person"] as const).map((value) => {
+              const label = value === "online" ? "Online" : "In person";
+              const { base, final } = priceFor(value, referred);
+              return (
+                <label key={value}
+                  className={`cursor-pointer rounded-control border px-4 py-3 text-center ${
+                    form.learning_mode === value
+                      ? "border-accent text-white"
+                      : "border-line text-muted"
+                  }`}>
+                  <input type="radio" name="learning_mode" value={value} className="sr-only"
+                    checked={form.learning_mode === value}
+                    onChange={() => set("learning_mode", value)} />
+                  <span className="block text-sm">{label}</span>
+                  <span className="mt-1 block text-[11px] text-muted/75">
+                    {referred ? (
+                      <>
+                        <s>{formatGMD(base)}</s> {formatGMD(final)}
+                      </>
+                    ) : (
+                      formatGMD(base)
+                    )}
+                  </span>
+                </label>
+              );
+            })}
           </div>
         </fieldset>
 
@@ -165,6 +217,28 @@ export default function SignupPage() {
             <option value="youtube">YouTube</option>
             <option value="other">Other</option>
           </select>
+        </div>
+
+        <div>
+          <label className={labelCls} htmlFor="referral">Referral code (optional)</label>
+          <input id="referral" maxLength={14} autoComplete="off" className={inputCls}
+            placeholder={`from a friend, for ${REFERRAL_DISCOUNT_PERCENT}% off`} value={form.referral}
+            onChange={(e) => {
+              set("referral", e.target.value.toUpperCase());
+              setCodeState("idle");
+            }}
+            onBlur={(e) => checkCode(e.target.value)} />
+          <p className="mt-2 min-h-4 text-xs" aria-live="polite">
+            {codeState === "checking" && <span className="text-muted">Checking code...</span>}
+            {codeState === "valid" && (
+              <span className="text-accent">
+                Code accepted. You get {REFERRAL_DISCOUNT_PERCENT}% off.
+              </span>
+            )}
+            {codeState === "invalid" && (
+              <span className="text-danger">This code is not valid.</span>
+            )}
+          </p>
         </div>
 
         <label className="flex items-start gap-3 text-xs text-muted">

@@ -1,11 +1,15 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { checkDevice } from "@/lib/device";
 import { whatsappLink } from "@/lib/whatsapp";
+import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
 import DashboardShell from "@/components/DashboardShell";
 import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import ProgressVideo from "@/components/ProgressVideo";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
+import TopBar from "@/components/TopBar";
 
 const RESOURCES = [
   { name: "TradingView", tag: "Charts", url: "https://www.tradingview.com" },
@@ -37,12 +41,17 @@ export default async function DashboardPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, learning_mode, payment_status, role")
+    .select("full_name, email, learning_mode, payment_status, role, referral_discount")
     .eq("id", user!.id)
     .single();
 
   const isAdmin = profile?.role === "admin";
   const cleared = isAdmin || profile?.payment_status === "cleared";
+
+  // Paid students can use up to the allowed number of devices. Admins are never limited.
+  if (!isAdmin && cleared && (await checkDevice(supabase)) === "limit") {
+    redirect("/device-limit");
+  }
 
   const [{ data: modulesRaw }, { data: unlockedRaw }, { data: progressRows }] =
     await Promise.all([
@@ -103,10 +112,13 @@ export default async function DashboardPage({
     videoSrc = signed?.signedUrl ?? null;
   }
 
+  const referred = !!profile?.referral_discount;
+  const price = priceFor(profile?.learning_mode, referred);
   const waHref = whatsappLink(
     profile?.full_name ?? "",
     profile?.email ?? "",
-    profile?.learning_mode ?? null
+    profile?.learning_mode ?? null,
+    { referred }
   );
 
   const title = !cleared
@@ -122,13 +134,16 @@ export default async function DashboardPage({
           modules={modules}
           cleared={cleared}
           activeId={lesson?.id}
-          name={profile?.full_name || "Trader"}
-          isAdmin={isAdmin}
           unlockedIds={unlockedIds}
           completedIds={completedIds}
         />
       }
     >
+      <TopBar
+        fullName={profile?.full_name ?? ""}
+        isAdmin={isAdmin}
+        showTools={cleared}
+      />
       <RealtimeRefresh filter={`id=eq.${user!.id}`} />
       {cleared && <RealtimeRefresh table="announcements" />}
       {cleared && lesson && lessonUnlocked && (
@@ -204,6 +219,15 @@ export default async function DashboardPage({
             <p className="mt-3 text-sm text-muted">
               Complete your payment on WhatsApp. This page unlocks by itself
               as soon as we confirm it, no need to reload.
+            </p>
+            <p className="mt-4 text-sm">
+              <span className="text-muted">Your price: </span>
+              <span className="font-bold">{formatGMD(price.final)}</span>
+              {referred && (
+                <span className="mt-1 block text-xs text-accent">
+                  {REFERRAL_DISCOUNT_PERCENT}% referral discount applied
+                </span>
+              )}
             </p>
             <a href={waHref} target="_blank" rel="noopener noreferrer"
               className="mt-6 block rounded-control bg-accent px-6 py-3.5 text-xs font-extrabold tracking-wider text-black uppercase">

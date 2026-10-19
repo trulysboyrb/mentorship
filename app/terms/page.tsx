@@ -41,6 +41,7 @@ export default function TermsPage() {
       <Section title="4. Your account">
         <ul>
           <li>Your account is personal to you. Do not share your login or let anyone else use it.</li>
+          <li>Your account can be used on a limited number of devices at once. You can manage them on your Profile page.</li>
           <li>Give us accurate details when you sign up and keep them up to date.</li>
           <li>Keep your password private. You are responsible for activity on your account.</li>
           <li>We may suspend or close accounts that break these terms.</li>
@@ -57,6 +58,15 @@ export default function TermsPage() {
           We will never ask for your broker password, your wallet seed phrase,
           or your bank PIN. Only pay through the methods our team gives you
           directly.
+        </p>
+      </Section>
+
+      <Section title="5a. Referral discount">
+        <p>
+          Students who join using a valid referral code from a paid student receive a
+          5% discount on a one-time course fee. The discount is agreed with our team
+          when you pay and cannot be combined with other offers. We may withdraw codes
+          that are abused.
         </p>
       </Section>
 

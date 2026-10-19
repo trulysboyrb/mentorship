@@ -1,5 +1,4 @@
 import Link from "next/link";
-import SignOutButton from "@/components/SignOutButton";
 import LegalLinks from "@/components/LegalLinks";
 
 type Lesson = { id: string; position: number; title: string };
@@ -24,20 +23,17 @@ function Check() {
   );
 }
 
+// Profile, admin link and log out now live in the top-right account menu.
 export default function Sidebar({
   modules,
   cleared,
   activeId,
-  name,
-  isAdmin,
   unlockedIds,
   completedIds,
 }: {
   modules: Module[];
   cleared: boolean;
   activeId?: string;
-  name: string;
-  isAdmin: boolean;
   unlockedIds: string[];
   completedIds: string[];
 }) {
@@ -50,6 +46,16 @@ export default function Sidebar({
       <h1 className="mb-6 text-xl font-black tracking-tight text-accent">
         APEXTRADE ACADEMY
       </h1>
+
+      {cleared && (
+        <Link
+          href="/tools"
+          className="mb-6 flex items-center justify-between rounded-control border border-line bg-surface-2 px-4 py-3 text-sm font-semibold hover:border-accent"
+        >
+          Market tools
+          <span className="text-[10px] font-normal text-muted">Calendar, sessions</span>
+        </Link>
+      )}
 
       <nav className="flex-1 space-y-6">
         {modules.map((m) => (
@@ -104,22 +110,10 @@ export default function Sidebar({
       </nav>
 
       <div className="mt-8 space-y-3 border-t border-line pt-5">
-        <p className="truncate text-sm">{name}</p>
         <p className={`text-[10px] font-extrabold tracking-widest uppercase ${cleared ? "text-accent" : "text-danger"}`}>
           {cleared ? `${completed.size} of ${total} lessons completed` : "Payment pending"}
         </p>
-        <div className="flex items-center gap-4">
-          <SignOutButton />
-          <Link href="/profile" className="text-xs text-muted hover:text-white">
-            Profile
-          </Link>
-          {isAdmin && (
-            <Link href="/admin" className="text-xs text-accent hover:underline">
-              Admin
-            </Link>
-          )}
-        </div>
-        <LegalLinks className="!justify-start pt-2" />
+        <LegalLinks className="!justify-start" />
       </div>
     </div>
   );

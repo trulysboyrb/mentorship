@@ -7,6 +7,8 @@ import { BRAND } from "@/lib/config";
 import { buildCertificatePdf, makeSerial } from "@/lib/certificatePdf";
 import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
+import AdminDevicesModal from "@/components/AdminDevicesModal";
+import { formatGMD, priceFor } from "@/lib/pricing";
 
 type Student = {
   id: string;
@@ -16,6 +18,8 @@ type Student = {
   learning_mode: string | null;
   payment_status: string;
   created_at: string;
+  referral_discount: boolean;
+  referrer_name: string | null;
 };
 
 type Filter = "all" | "pending" | "cleared" | "finished";
@@ -44,6 +48,7 @@ export default function AdminStudents({
   const [error, setError] = useState("");
   const [certFor, setCertFor] = useState<string | null>(null);
   const [notesFor, setNotesFor] = useState<string | null>(null);
+  const [devicesFor, setDevicesFor] = useState<string | null>(null);
 
   const shown = students.filter((s) => {
     if (filter === "all") return true;
@@ -161,7 +166,7 @@ export default function AdminStudents({
               <th className="px-4 py-3">Name</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">WhatsApp</th>
-              <th className="px-4 py-3">Mode</th>
+              <th className="px-4 py-3">Mode / price</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Progress</th>
               <th className="px-4 py-3 text-right">Action</th>
@@ -187,6 +192,14 @@ export default function AdminStudents({
                   </td>
                   <td className="px-4 py-3 text-muted">
                     {s.learning_mode === "in_person" ? "In person" : "Online"}
+                    <span className="block text-xs">
+                      {formatGMD(priceFor(s.learning_mode, s.referral_discount).final)}
+                    </span>
+                    {s.referral_discount && (
+                      <span className="block text-[10px] font-extrabold tracking-widest text-accent uppercase">
+                        5% referral{s.referrer_name ? ` · ${s.referrer_name}` : ""}
+                      </span>
+                    )}
                   </td>
                   <td className={`px-4 py-3 ${cleared ? "text-accent" : "text-danger"}`}>
                     {cleared ? "Cleared" : "Pending"}
@@ -216,6 +229,12 @@ export default function AdminStudents({
                       >
                         Give Certificate
                         {certCount > 0 && <span className="ml-2 text-accent">({certCount})</span>}
+                      </button>
+                      <button
+                        onClick={() => setDevicesFor(s.id)}
+                        className={`${actionBtn} border-line text-white hover:border-accent`}
+                      >
+                        Devices
                       </button>
                       <button
                         onClick={() => setNotesFor(s.id)}
@@ -256,6 +275,12 @@ export default function AdminStudents({
           student={students.find((x) => x.id === certFor)!}
           certificates={certificates[certFor] ?? []}
           onClose={() => setCertFor(null)}
+        />
+      )}
+      {devicesFor && students.find((x) => x.id === devicesFor) && (
+        <AdminDevicesModal
+          student={students.find((x) => x.id === devicesFor)!}
+          onClose={() => setDevicesFor(null)}
         />
       )}
       {notesFor && students.find((x) => x.id === notesFor) && (

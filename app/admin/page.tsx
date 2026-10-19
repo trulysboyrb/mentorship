@@ -28,7 +28,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at")
+      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by")
       .eq("role", "student")
       .order("created_at", { ascending: false }),
     supabase.rpc("admin_student_stats"),
@@ -75,6 +75,21 @@ export default async function AdminPage() {
     });
   });
 
+  const nameById: Record<string, string> = {};
+  (students ?? []).forEach((s) => (nameById[s.id] = s.full_name));
+  const rows = (students ?? []).map((s) => ({
+    id: s.id,
+    full_name: s.full_name,
+    email: s.email,
+    whatsapp: s.whatsapp,
+    learning_mode: s.learning_mode,
+    payment_status: s.payment_status,
+    created_at: s.created_at,
+    referral_discount: !!s.referral_discount,
+    // Referrers are always students or admin; admins are not in this list, so fall back to null.
+    referrer_name: s.referred_by ? (nameById[s.referred_by] ?? null) : null,
+  }));
+
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
       <RealtimeRefresh />
@@ -83,7 +98,7 @@ export default async function AdminPage() {
 
       <h2 className="mt-10 text-3xl font-black tracking-tight">Students</h2>
       <AdminStudents
-        students={students ?? []}
+        students={rows}
         completed={completed}
         totalLessons={totalLessons ?? 0}
         finished={finished}

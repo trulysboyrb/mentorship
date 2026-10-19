@@ -49,6 +49,18 @@ export default function PrivacyPage() {
             details.
           </li>
           <li>
+            <strong>Devices:</strong> to limit account sharing, a random device
+            ID is stored in a cookie on each browser you use, together with a
+            short description of that device (for example &quot;Chrome on
+            Android&quot;) and when it was last used. You can see and remove your
+            devices on your Profile page.
+          </li>
+          <li>
+            <strong>Referral codes:</strong> each student has a referral code.
+            If you join with someone&apos;s code, we record whose code it was so
+            the discount can be applied.
+          </li>
+          <li>
             <strong>Technical data:</strong> a login cookie that keeps you
             signed in, plus basic server logs created by our hosting providers.
           </li>

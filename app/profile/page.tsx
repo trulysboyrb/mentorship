@@ -9,6 +9,8 @@ import PdfPreview from "@/components/PdfPreview";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import DevicesPanel, { type DeviceItem } from "@/components/DevicesPanel";
 import ReferralPanel from "@/components/ReferralPanel";
+import NotesPanel, { type NoteItem } from "@/components/NotesPanel";
+import type { Earnings, PayoutRow } from "@/lib/earnings";
 import InstallApp from "@/components/InstallApp";
 import { CONTACT_EMAIL } from "@/lib/legal";
 
@@ -37,8 +39,15 @@ export default async function ProfilePage() {
 
   const token = await currentDeviceToken();
 
-  const [{ data: certRows }, { data: deviceRows }, { data: maxDevices }, { data: stats }] =
-    await Promise.all([
+  const [
+    { data: certRows },
+    { data: deviceRows },
+    { data: maxDevices },
+    { data: stats },
+    { data: earningsRaw },
+    { data: payoutRows },
+    { data: resourceRows },
+  ] = await Promise.all([
       supabase
         .from("certificates")
         .select("id, title, file_path, issued_at")
@@ -49,7 +58,49 @@ export default async function ProfilePage() {
         : Promise.resolve({ data: [] as DeviceItem[] }),
       supabase.rpc("max_devices"),
       supabase.rpc("my_referral_stats"),
+      supabase.rpc("my_earnings"),
+      supabase
+        .from("payout_requests")
+        .select("id, amount, payout_info, status, admin_note, created_at, resolved_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
+      supabase
+        .from("resources")
+        .select("id, title, body, file_path, file_name, file_size, created_at, lessons(title)")
+        .order("created_at", { ascending: false }),
     ]);
+
+  // Notes and downloads uploaded by the admin (the database only returns what this student may see).
+  const notes: NoteItem[] = await Promise.all(
+    ((resourceRows ?? []) as unknown as {
+      id: string;
+      title: string;
+      body: string | null;
+      file_path: string | null;
+      file_name: string | null;
+      file_size: number | null;
+      created_at: string;
+      lessons: { title: string } | { title: string }[] | null;
+    }[]).map(async (r) => {
+      const lessonTitle = Array.isArray(r.lessons) ? r.lessons[0]?.title : r.lessons?.title;
+      const url = r.file_path
+        ? ((await supabase.storage
+            .from("resources")
+            .createSignedUrl(r.file_path, 3600, { download: r.file_name ?? true })).data?.signedUrl ?? null)
+        : null;
+      return {
+        id: r.id,
+        title: r.title,
+        body: r.body,
+        file_name: r.file_name,
+        size: r.file_size,
+        created_at: r.created_at,
+        url,
+        lesson_title: lessonTitle ?? null,
+      };
+    })
+  );
 
   const certs = await Promise.all(
     (certRows ?? []).map(async (c) => {
@@ -93,6 +144,8 @@ export default async function ProfilePage() {
         </p>
 
         <RealtimeRefresh table="certificates" filter={`user_id=eq.${user.id}`} />
+        <RealtimeRefresh table="resources" />
+        <RealtimeRefresh table="payout_requests" filter={`user_id=eq.${user.id}`} />
 
         <section className="mt-10">
           <h2 className="text-xs font-extrabold tracking-widest uppercase">Certificates</h2>
@@ -132,12 +185,16 @@ export default async function ProfilePage() {
           )}
         </section>
 
+        <NotesPanel items={notes} />
+
         <ReferralPanel
           code={profile.referral_code}
           active={cleared || isAdmin}
           total={refStats?.total ?? 0}
           paid={refStats?.paid ?? 0}
           usedCode={profile.referral_discount}
+          earnings={(earningsRaw ?? null) as Earnings | null}
+          payouts={(payoutRows ?? []) as PayoutRow[]}
         />
 
         {limited && (

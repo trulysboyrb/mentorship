@@ -89,7 +89,7 @@ export default function ProgressVideo({
 
   return (
     <>
-      <div className="aspect-video overflow-hidden rounded-card border border-line bg-black">
+      <div className="aspect-video overflow-hidden rounded-card border border-line bg-[#000]">
         <video
           ref={videoRef}
           src={stableSrc}

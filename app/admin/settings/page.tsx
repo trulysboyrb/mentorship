@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import AdminNav from "@/components/AdminNav";
 import MaxDevicesForm from "@/components/MaxDevicesForm";
+import PayoutSettingsForm from "@/components/PayoutSettingsForm";
 
 export default async function AdminSettingsPage() {
   const supabase = await createClient();
@@ -11,7 +12,11 @@ export default async function AdminSettingsPage() {
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
   if (me?.role !== "admin") redirect("/dashboard");
 
-  const { data: max } = await supabase.rpc("max_devices");
+  const [{ data: max }, { data: reward }, { data: minPayout }] = await Promise.all([
+    supabase.rpc("max_devices"),
+    supabase.rpc("referral_reward"),
+    supabase.rpc("min_payout"),
+  ]);
   const current = typeof max === "number" ? max : 2;
 
   return (
@@ -25,6 +30,12 @@ export default async function AdminSettingsPage() {
         This limit is enforced by the app when a student opens their dashboard. It stops normal
         account sharing, but it is not a perfect lock against a determined person.
       </p>
+
+      <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Referral rewards</h3>
+      <PayoutSettingsForm
+        reward={typeof reward === "number" ? reward : 500}
+        minPayout={typeof minPayout === "number" ? minPayout : 500}
+      />
     </main>
   );
 }

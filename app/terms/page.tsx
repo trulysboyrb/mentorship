@@ -70,6 +70,16 @@ export default function TermsPage() {
         </p>
       </Section>
 
+      <Section title="5b. Referral rewards">
+        <p>
+          Paid students may earn a fixed reward for each friend who joins with their
+          referral code and is then confirmed as paid. The reward amount and the
+          minimum payout are set by us and may change for future referrals. Rewards
+          are paid out by us on request, to the account you give us, and are not
+          paid if a payment is reversed or a code is misused.
+        </p>
+      </Section>
+
       <Section title="6. Course content">
         <p>
           All videos, notes and materials belong to {BUSINESS_NAME}. You get a

@@ -100,6 +100,10 @@ app/tools/              market tools (sessions, calculator, calendar)
 app/admin/analytics/    analytics page
 app/admin/settings/     devices-per-student setting
 public/sw.js            tiny service worker for the installable app
+lib/landing.ts          landing page text: steps, FAQ, testimonials (add real ones)
+app/classes/            live classes (student)   app/admin/classes/  (admin)
+app/quiz/               module quizzes (student) app/admin/quizzes/  (admin)
+app/admin/notes/        upload notes and files   app/admin/payouts/  payout requests
 lib/supabase/           connection to Supabase
 supabase/migrations/    database changes, in order
 .env.local              secret keys (NEVER upload or share)
@@ -110,6 +114,14 @@ Install test: npm run build && npm run start, open http://localhost:3000 in Chro
    (the app only registers its service worker in a production build)
 Device limit test: log in as a paid student in Chrome, then Firefox, then a
    private window -> the 3rd one lands on /device-limit (when limit is 2)
+
+## Phase 9 quick tests
+SQL: paste supabase/migrations/20261020000000_phase9.sql into Supabase SQL Editor, run ONCE
+Quiz: Admin > Quizzes > pick a module > add 2 questions; as a paid student finish the
+   module's lessons, then the "Module quiz" row appears in the sidebar
+Payout: Admin > Settings > set reward; clear a student who joined with a code;
+   the referrer's Profile shows Earned; press Request payout; Admin shows a red alert
+Theme: account menu (top right) > Light mode / Dark mode
 
 ## When something breaks
 1. Read the error in the terminal: the first lines usually say which file

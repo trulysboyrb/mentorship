@@ -3,6 +3,14 @@ import LegalLinks from "@/components/LegalLinks";
 
 type Lesson = { id: string; position: number; title: string };
 type Module = { id: string; position: number; title: string; lessons: Lesson[] };
+export type QuizStatus = {
+  module_id: string;
+  question_count: number;
+  pass_mark: number;
+  passed: boolean;
+  best_score: number | null;
+  ready: boolean;
+};
 
 function Lock() {
   return (
@@ -30,13 +38,16 @@ export default function Sidebar({
   activeId,
   unlockedIds,
   completedIds,
+  quizzes = [],
 }: {
   modules: Module[];
   cleared: boolean;
   activeId?: string;
   unlockedIds: string[];
   completedIds: string[];
+  quizzes?: QuizStatus[];
 }) {
+  const quizByModule = new Map(quizzes.map((q) => [q.module_id, q]));
   const unlocked = new Set(unlockedIds);
   const completed = new Set(completedIds);
   const total = modules.reduce((n, m) => n + m.lessons.length, 0);
@@ -48,13 +59,22 @@ export default function Sidebar({
       </h1>
 
       {cleared && (
-        <Link
-          href="/tools"
-          className="mb-6 flex items-center justify-between rounded-control border border-line bg-surface-2 px-4 py-3 text-sm font-semibold hover:border-accent"
-        >
-          Market tools
-          <span className="text-[10px] font-normal text-muted">Calendar, sessions</span>
-        </Link>
+        <div className="mb-6 space-y-2">
+          <Link
+            href="/classes"
+            className="flex items-center justify-between rounded-control border border-line bg-surface-2 px-4 py-3 text-sm font-semibold hover:border-accent"
+          >
+            Live classes
+            <span className="text-[10px] font-normal text-muted">Schedule, reminders</span>
+          </Link>
+          <Link
+            href="/tools"
+            className="flex items-center justify-between rounded-control border border-line bg-surface-2 px-4 py-3 text-sm font-semibold hover:border-accent"
+          >
+            Market tools
+            <span className="text-[10px] font-normal text-muted">Calendar, sessions</span>
+          </Link>
+        </div>
       )}
 
       <nav className="flex-1 space-y-6">
@@ -104,6 +124,33 @@ export default function Sidebar({
                   </li>
                 );
               })}
+              {cleared && quizByModule.get(m.id) && (() => {
+                const q = quizByModule.get(m.id)!;
+                const base =
+                  "flex items-center gap-3 rounded-control border border-dashed bg-surface-2 px-4 py-3 text-sm";
+                if (!q.ready) {
+                  return (
+                    <li key={`quiz-${m.id}`} className={`${base} border-line text-muted select-none`}>
+                      Module quiz
+                      <span className="ml-auto text-[10px]">Finish the lessons</span>
+                    </li>
+                  );
+                }
+                return (
+                  <li key={`quiz-${m.id}`}>
+                    <Link
+                      href={`/quiz/${m.id}`}
+                      className={`${base} ${q.passed ? "border-accent/60" : "border-accent"} text-white hover:border-accent`}
+                    >
+                      {q.passed ? <Check /> : <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
+                      Module quiz
+                      <span className="ml-auto text-[10px] text-muted">
+                        {q.passed ? `Passed ${q.best_score}%` : `Pass mark ${q.pass_mark}%`}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })()}
             </ul>
           </div>
         ))}

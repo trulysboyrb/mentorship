@@ -20,7 +20,7 @@ export default async function AdminPage() {
   if (me?.role !== "admin") redirect("/dashboard");
 
   const [
-    { data: students },
+    { data: students, error: studentsError },
     { data: stats },
     { data: certRows },
     { data: noteRows },
@@ -97,6 +97,16 @@ export default async function AdminPage() {
       <AdminNav current="/admin" />
 
       <h2 className="mt-10 text-3xl font-black tracking-tight">Students</h2>
+      {studentsError && (
+        <div className="mt-6 rounded-card border border-danger bg-surface p-5 text-sm">
+          <p className="font-extrabold text-danger">The students list could not be loaded.</p>
+          <p className="mt-2 break-words text-muted">{studentsError.message}</p>
+          <p className="mt-2 text-muted">
+            Your students are safe in the database. This usually means a SQL file from the latest
+            update has not been run yet in Supabase (SQL Editor).
+          </p>
+        </div>
+      )}
       <AdminStudents
         students={rows}
         completed={completed}

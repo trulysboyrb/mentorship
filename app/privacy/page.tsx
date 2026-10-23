@@ -39,6 +39,15 @@ export default function PrivacyPage() {
             include your name.
           </li>
           <li>
+            <strong>Live classes and quizzes:</strong> which live classes you set
+            a reminder for, and your quiz attempts and scores.
+          </li>
+          <li>
+            <strong>Referral earnings:</strong> if you refer friends, we record
+            what you have earned, and the payout requests you make, including
+            where you asked us to send the money (for example a Wave number).
+          </li>
+          <li>
             <strong>Staff notes:</strong> private notes our team may keep about
             your account, for example about payment or class arrangements.
             Students cannot see these.

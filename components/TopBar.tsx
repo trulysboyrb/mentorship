@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { firstNameOf, greetingFor, initialOf } from "@/lib/greeting";
 import { useInstall } from "@/components/useInstall";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const itemCls =
   "block w-full px-4 py-2.5 text-left text-sm text-white/80 hover:bg-surface-2 hover:text-white";
@@ -96,6 +97,11 @@ export default function TopBar({
               Profile
             </Link>
             {showTools && (
+              <Link role="menuitem" href="/classes" onClick={close} className={itemCls}>
+                Live classes
+              </Link>
+            )}
+            {showTools && (
               <Link role="menuitem" href="/tools" onClick={close} className={itemCls}>
                 Market tools
               </Link>
@@ -123,6 +129,7 @@ export default function TopBar({
                 </Link>
               )
             )}
+            <ThemeToggle variant="menu" />
             <button role="menuitem" onClick={signOut} className={`${itemCls} border-t border-line`}>
               Log out
             </button>

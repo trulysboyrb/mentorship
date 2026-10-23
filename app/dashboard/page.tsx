@@ -10,6 +10,9 @@ import ProgressVideo from "@/components/ProgressVideo";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
 import TopBar from "@/components/TopBar";
+import NextClassBanner from "@/components/NextClassBanner";
+import type { QuizStatus } from "@/components/Sidebar";
+import type { ClassRow } from "@/lib/classes";
 
 const RESOURCES = [
   { name: "TradingView", tag: "Charts", url: "https://www.tradingview.com" },
@@ -18,7 +21,7 @@ const RESOURCES = [
 
 const VideoBox = ({ children }: { children?: React.ReactNode }) => (
   <>
-    <div className="aspect-video overflow-hidden rounded-card border border-line bg-black">
+    <div className="aspect-video overflow-hidden rounded-card border border-line bg-[#000]">
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted">
         {children}
       </div>
@@ -87,6 +90,54 @@ export default async function DashboardPage({
           .maybeSingle()
       : { data: null };
 
+  // Quizzes, live classes, and downloads that belong to this lesson.
+  const [{ data: quizRaw }, { data: classRaw }, { data: reminderRaw }, { data: lessonResRaw }] =
+    cleared
+      ? await Promise.all([
+          supabase.rpc("quiz_status"),
+          supabase
+            .from("live_classes")
+            .select("id, title, description, starts_at, duration_minutes, kind, join_url, location")
+            .gte("starts_at", new Date(Date.now() - 8 * 3600_000).toISOString())
+            .order("starts_at", { ascending: true })
+            .limit(10),
+          supabase.from("class_reminders").select("class_id").eq("user_id", user!.id),
+          lesson && lessonUnlocked
+            ? supabase
+                .from("resources")
+                .select("id, title, body, file_path, file_name")
+                .eq("lesson_id", lesson.id)
+                .order("created_at")
+            : Promise.resolve({ data: null }),
+        ])
+      : [{ data: null }, { data: null }, { data: null }, { data: null }];
+
+  const quizzes = (quizRaw ?? []) as QuizStatus[];
+  const upcomingClasses = (classRaw ?? []) as ClassRow[];
+  const reminderIds = (reminderRaw ?? []).map((r: { class_id: string }) => r.class_id);
+  const downloads = await Promise.all(
+    ((lessonResRaw ?? []) as { id: string; title: string; body: string | null; file_path: string | null; file_name: string | null }[]).map(
+      async (r) => ({
+        ...r,
+        url: r.file_path
+          ? ((await supabase.storage
+              .from("resources")
+              .createSignedUrl(r.file_path, 3600, { download: r.file_name ?? true })).data?.signedUrl ?? null)
+          : null,
+      })
+    )
+  );
+
+  // If this lesson is locked only because an earlier module's quiz is not passed, say so.
+  const lessonModule = lesson ? modules.find((m) => m.lessons.some((l) => l.id === lesson.id)) : undefined;
+  const blockingQuiz =
+    lesson && !lessonUnlocked && lessonModule
+      ? modules
+          .filter((m) => m.position < lessonModule.position)
+          .map((m) => ({ m, q: quizzes.find((q) => q.module_id === m.id) }))
+          .find((x) => x.q && !x.q.passed)
+      : undefined;
+
   const { data: announcements } = cleared
     ? await supabase
         .from("announcements")
@@ -136,6 +187,7 @@ export default async function DashboardPage({
           activeId={lesson?.id}
           unlockedIds={unlockedIds}
           completedIds={completedIds}
+          quizzes={quizzes}
         />
       }
     >
@@ -157,12 +209,29 @@ export default async function DashboardPage({
           <Announcements items={announcements} />
         )}
 
+        {cleared && upcomingClasses.length > 0 && (
+          <NextClassBanner classes={upcomingClasses} reminders={reminderIds} />
+        )}
+
         <div className={`mt-6 space-y-6 ${cleared ? "" : "pointer-events-none blur-sm select-none"}`}>
           <div className="space-y-3">
             {!lesson ? (
               <VideoBox />
             ) : !lessonUnlocked ? (
-              <VideoBox>Finish the previous lesson to unlock this one.</VideoBox>
+              <VideoBox>
+                {blockingQuiz ? (
+                  <span>
+                    Pass the Module {blockingQuiz.m.position} quiz to unlock this lesson.
+                    {blockingQuiz.q?.ready && (
+                      <a href={`/quiz/${blockingQuiz.m.id}`} className="mt-3 block text-accent hover:underline">
+                        Take the quiz
+                      </a>
+                    )}
+                  </span>
+                ) : (
+                  "Finish the previous lesson to unlock this one."
+                )}
+              </VideoBox>
             ) : videoSrc ? (
               <ProgressVideo
                 key={`${lesson.id}-${content?.video_path ?? content?.video_url}`}
@@ -179,6 +248,28 @@ export default async function DashboardPage({
               <VideoBox>Video coming soon</VideoBox>
             )}
           </div>
+
+          {downloads.length > 0 && (
+            <div className="rounded-card border border-line bg-surface p-6">
+              <h3 className="text-xs font-extrabold tracking-widest uppercase">Downloads for this lesson</h3>
+              <ul className="mt-4 space-y-3">
+                {downloads.map((d) => (
+                  <li key={d.id} className="rounded-control border border-line bg-surface-2 p-4">
+                    <p className="text-sm font-semibold">{d.title}</p>
+                    {d.body && <p className="mt-2 text-sm whitespace-pre-wrap text-white/70">{d.body}</p>}
+                    {d.url && (
+                      <a
+                        href={d.url}
+                        className="mt-3 inline-block rounded-control bg-accent px-4 py-2 text-xs font-extrabold tracking-wider text-black uppercase"
+                      >
+                        Download{d.file_name ? ` (${d.file_name})` : ""}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="grid gap-6 md:grid-cols-3">
             <div className="rounded-card border border-line bg-surface p-6 md:col-span-2">

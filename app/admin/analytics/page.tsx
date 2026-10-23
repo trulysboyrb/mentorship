@@ -148,9 +148,9 @@ export default async function AnalyticsPage() {
         </div>
         <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img"
           aria-label="Weekly signups and paid students for the last 12 weeks">
-          <line x1={padL} x2={W} y1={H - padB} y2={H - padB} stroke="#2a2a2a" />
-          <text x={0} y={12} fontSize="10" fill="#8a8a8a">{maxV}</text>
-          <text x={0} y={H - padB} fontSize="10" fill="#8a8a8a">0</text>
+          <line x1={padL} x2={W} y1={H - padB} y2={H - padB} className="stroke-line" />
+          <text x={0} y={12} fontSize="10" className="fill-muted">{maxV}</text>
+          <text x={0} y={H - padB} fontSize="10" className="fill-muted">0</text>
           {weeks.map((w, i) => {
             const x = padL + i * slot + slot / 2;
             const h1 = ((H - padB - 16) * w.signups) / maxV;
@@ -160,16 +160,16 @@ export default async function AnalyticsPage() {
                 <rect x={x - barW - 1} y={H - padB - h1} width={barW} height={h1} fill={BLUE} />
                 <rect x={x + 1} y={H - padB - h2} width={barW} height={h2} fill={GREEN} />
                 {w.signups > 0 && (
-                  <text x={x - barW / 2 - 1} y={H - padB - h1 - 3} fontSize="9" textAnchor="middle" fill="#cfcfcf">
+                  <text x={x - barW / 2 - 1} y={H - padB - h1 - 3} fontSize="9" textAnchor="middle" className="fill-white/80">
                     {w.signups}
                   </text>
                 )}
                 {w.paid > 0 && (
-                  <text x={x + barW / 2 + 1} y={H - padB - h2 - 3} fontSize="9" textAnchor="middle" fill="#cfcfcf">
+                  <text x={x + barW / 2 + 1} y={H - padB - h2 - 3} fontSize="9" textAnchor="middle" className="fill-white/80">
                     {w.paid}
                   </text>
                 )}
-                <text x={x} y={H - 8} fontSize="9" textAnchor="middle" fill="#8a8a8a">
+                <text x={x} y={H - 8} fontSize="9" textAnchor="middle" className="fill-muted">
                   {w.week.slice(5)}
                 </text>
               </g>

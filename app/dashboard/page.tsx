@@ -10,6 +10,7 @@ import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import ProgressVideo from "@/components/ProgressVideo";
 import YouTubeProgress from "@/components/YouTubeProgress";
+import LiveChart from "@/components/LiveChart";
 import { youTubeIdFromStored } from "@/lib/youtube";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
@@ -311,6 +312,8 @@ export default async function DashboardPage({
               </ul>
             </div>
           </div>
+
+          {cleared && <LiveChart />}
 
           {cleared && lesson && lessonUnlocked && (
             <LessonComments

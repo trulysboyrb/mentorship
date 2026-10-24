@@ -9,6 +9,8 @@ import DashboardShell from "@/components/DashboardShell";
 import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import ProgressVideo from "@/components/ProgressVideo";
+import YouTubeProgress from "@/components/YouTubeProgress";
+import { youTubeIdFromStored } from "@/lib/youtube";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
 import TopBar from "@/components/TopBar";
@@ -157,6 +159,7 @@ export default async function DashboardPage({
           .order("created_at", { ascending: true })
       : { data: null };
 
+  const youTubeId = youTubeIdFromStored(content?.video_url);
   let videoSrc: string | null = content?.video_url ?? null;
   if (content?.video_path) {
     const { data: signed } = await supabase.storage
@@ -235,6 +238,18 @@ export default async function DashboardPage({
                   "Finish the previous lesson to unlock this one."
                 )}
               </VideoBox>
+            ) : youTubeId && !content?.video_path ? (
+              <YouTubeProgress
+                key={`${lesson.id}-${youTubeId}`}
+                videoId={youTubeId}
+                lessonId={lesson.id}
+                duration={content?.duration_seconds ?? null}
+                initialWatched={progress?.watched_seconds ?? 0}
+                initialPosition={progress?.last_position ?? 0}
+                completed={progress?.completed ?? false}
+                track={!isAdmin}
+                nextHref={nextLesson ? `/dashboard?lesson=${nextLesson.id}` : null}
+              />
             ) : videoSrc ? (
               <ProgressVideo
                 key={`${lesson.id}-${content?.video_path ?? content?.video_url}`}

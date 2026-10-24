@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { inputCls } from "@/components/ui";
+import { detectYouTubeDuration } from "@/lib/youtubeApi";
+import { formatDuration, parseBulkLines, parseDuration, parseYouTubeId, watchUrl, youTubeIdFromStored } from "@/lib/youtube";
 
 const BUCKET = "course-videos";
 const MAX_MB = 50; // Supabase free plan limit per file
@@ -12,6 +14,7 @@ type Content = {
   notes: string | null;
   video_path: string | null;
   video_url: string | null;
+  duration_seconds?: number | null;
 } | null;
 type Lesson = { id: string; position: number; title: string; content: Content };
 type Module = { id: string; position: number; title: string; lessons: Lesson[] };
@@ -46,6 +49,13 @@ export default function CourseManager({ modules }: { modules: Module[] }) {
   const [progress, setProgress] = useState<{ id: string; pct: number } | null>(null);
   const [newModule, setNewModule] = useState("");
   const [newLesson, setNewLesson] = useState<Record<string, string>>({});
+  const [ytLink, setYtLink] = useState<Record<string, string>>({});
+  const [ytLen, setYtLen] = useState<Record<string, string>>({});
+  const [ytBusy, setYtBusy] = useState<string | null>(null);
+  const [ytNote, setYtNote] = useState<Record<string, string>>({});
+  const [bulkText, setBulkText] = useState<Record<string, string>>({});
+  const [bulkMsg, setBulkMsg] = useState<Record<string, string>>({});
+  const [bulkBusy, setBulkBusy] = useState<string | null>(null);
 
   async function run(fn: () => PromiseLike<{ error: { message: string } | null }>) {
     setError("");
@@ -156,6 +166,119 @@ export default function CourseManager({ modules }: { modules: Module[] }) {
     setProgress(null);
   }
 
+  // ----- YouTube (unlisted) videos -----
+  async function saveYouTube(l: Lesson) {
+    setError("");
+    setYtNote((n) => ({ ...n, [l.id]: "" }));
+    const id = parseYouTubeId(ytLink[l.id] ?? "");
+    if (!id) {
+      setError("That is not a YouTube link. Paste the link from YouTube's Share button.");
+      return;
+    }
+    setYtBusy(l.id);
+    let dur = parseDuration(ytLen[l.id] ?? "");
+    if (dur === null) {
+      setYtNote((n) => ({ ...n, [l.id]: "Reading the video length from YouTube..." }));
+      dur = await detectYouTubeDuration(id);
+    }
+    if (dur === null) {
+      setYtBusy(null);
+      setYtNote((n) => ({
+        ...n,
+        [l.id]: "Could not read the length automatically. Type it in the Length box (for example 12:34) and press Save again.",
+      }));
+      return;
+    }
+    const old = l.content?.video_path;
+    await run(() =>
+      supabase
+        .from("lesson_content")
+        .upsert({ lesson_id: l.id, video_url: watchUrl(id), video_path: null, duration_seconds: dur })
+    );
+    if (old) await supabase.storage.from(BUCKET).remove([old]);
+    setYtLink((n) => ({ ...n, [l.id]: "" }));
+    setYtLen((n) => ({ ...n, [l.id]: "" }));
+    setYtNote((n) => ({ ...n, [l.id]: `Saved. Length ${formatDuration(dur)}.` }));
+    setYtBusy(null);
+  }
+
+  async function saveLength(l: Lesson) {
+    const dur = parseDuration(ytLen[l.id] ?? "");
+    if (dur === null) {
+      setError("Type the length like 12:34 (minutes:seconds) or 1:02:03.");
+      return;
+    }
+    await run(() => supabase.from("lesson_content").update({ duration_seconds: dur }).eq("lesson_id", l.id));
+    setYtLen((n) => ({ ...n, [l.id]: "" }));
+  }
+
+  // Many lessons at once from a list of links.
+  async function bulkAdd(m: Module) {
+    setError("");
+    const lines = parseBulkLines(bulkText[m.id] ?? "");
+    const good = lines.filter((x) => !x.error && x.id);
+    const bad = lines.filter((x) => x.error);
+    if (good.length === 0) {
+      setBulkMsg((n) => ({ ...n, [m.id]: bad.length ? bad.map((b) => `Line ${b.line}: ${b.error}`).join(". ") : "Paste at least one link first." }));
+      return;
+    }
+    setBulkBusy(m.id);
+    setBulkMsg((n) => ({ ...n, [m.id]: "Reading titles from YouTube..." }));
+
+    const need = good.filter((g) => !g.title).map((g) => g.id as string);
+    let found: Record<string, string | null> = {};
+    if (need.length) {
+      try {
+        const res = await fetch("/api/admin/youtube-info", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: need }),
+        });
+        const j = (await res.json()) as { titles?: Record<string, string | null> };
+        found = j.titles ?? {};
+      } catch {
+        found = {};
+      }
+    }
+
+    let position = m.lessons[m.lessons.length - 1]?.position ?? 0;
+    let added = 0;
+    const noLength: string[] = [];
+    for (const g of good) {
+      const id = g.id as string;
+      setBulkMsg((n) => ({ ...n, [m.id]: `Adding lesson ${added + 1} of ${good.length}...` }));
+      position += 1;
+      const title = g.title || found[id] || `Lesson ${position}`;
+      const { data: row, error: insErr } = await supabase
+        .from("lessons")
+        .insert({ module_id: m.id, position, title })
+        .select("id")
+        .single();
+      if (insErr || !row) {
+        setError(`Stopped at "${title}": ${insErr?.message ?? "could not add"}. ${added} lesson(s) were added before this.`);
+        break;
+      }
+      const dur = await detectYouTubeDuration(id);
+      if (dur === null) noLength.push(title);
+      const { error: cErr } = await supabase
+        .from("lesson_content")
+        .upsert({ lesson_id: row.id, video_url: watchUrl(id), video_path: null, duration_seconds: dur });
+      if (cErr) {
+        setError(`Added "${title}" but could not save its video: ${cErr.message}`);
+        break;
+      }
+      added += 1;
+    }
+
+    const parts = [`Added ${added} lesson${added === 1 ? "" : "s"}.`];
+    if (noLength.length) parts.push(`${noLength.length} need their length typed in (open the lesson and fill the Length box): ${noLength.join(", ")}.`);
+    if (bad.length) parts.push(`Skipped: ${bad.map((b) => `line ${b.line} (${b.error})`).join(", ")}.`);
+    setBulkMsg((n) => ({ ...n, [m.id]: parts.join(" ") }));
+    if (added > 0) setBulkText((n) => ({ ...n, [m.id]: "" }));
+    setBulkBusy(null);
+    router.refresh();
+  }
+
   async function removeVideo(l: Lesson) {
     if (!window.confirm("Remove this video?")) return;
     if (l.content?.video_path)
@@ -211,14 +334,25 @@ export default function CourseManager({ modules }: { modules: Module[] }) {
             {m.lessons.map((l, li) => {
               const isOpen = openLesson === l.id;
               const hasVideo = !!(l.content?.video_path || l.content?.video_url);
+              const ytId = !l.content?.video_path ? youTubeIdFromStored(l.content?.video_url) : null;
               return (
                 <li key={l.id} className="rounded-control border border-line bg-surface-2">
                   <div className="flex flex-wrap items-center gap-3 px-4 py-3">
                     <button onClick={() => setOpenLesson(isOpen ? null : l.id)}
                       className="flex-1 text-left text-sm font-medium">
                       {l.title}
-                      <span className={`ml-3 text-[10px] tracking-widest uppercase ${hasVideo ? "text-accent" : "text-muted"}`}>
-                        {hasVideo ? "Video uploaded" : "No video"}
+                      <span
+                        className={`ml-3 text-[10px] tracking-widest uppercase ${
+                          ytId && !l.content?.duration_seconds ? "text-danger" : hasVideo ? "text-accent" : "text-muted"
+                        }`}
+                      >
+                        {ytId
+                          ? l.content?.duration_seconds
+                            ? `YouTube · ${formatDuration(l.content.duration_seconds)}`
+                            : "YouTube · needs length"
+                          : hasVideo
+                            ? "Video uploaded"
+                            : "No video"}
                       </span>
                     </button>
                     <button className={smallBtn} disabled={li === 0}
@@ -251,7 +385,51 @@ export default function CourseManager({ modules }: { modules: Module[] }) {
 
                       <div>
                         <p className="mb-2 text-[10px] font-semibold tracking-widest text-muted uppercase">
-                          Video (mp4 or webm, max {MAX_MB} MB)
+                          YouTube video (set it to Unlisted on YouTube)
+                        </p>
+                        {ytId && (
+                          <p className="mb-3 text-xs text-muted">
+                            Current: youtu.be/{ytId}
+                            {l.content?.duration_seconds ? ` · length ${formatDuration(l.content.duration_seconds)}` : " · length missing, students cannot progress until you set it"}
+                          </p>
+                        )}
+                        <input
+                          placeholder="Paste the YouTube link"
+                          className={inputCls}
+                          value={ytLink[l.id] ?? ""}
+                          onChange={(e) => setYtLink((n) => ({ ...n, [l.id]: e.target.value }))}
+                        />
+                        <div className="mt-3 flex flex-wrap items-center gap-3">
+                          <input
+                            placeholder="Length e.g. 12:34 (optional)"
+                            className={`${inputCls} max-w-[13rem] !py-2`}
+                            value={ytLen[l.id] ?? ""}
+                            onChange={(e) => setYtLen((n) => ({ ...n, [l.id]: e.target.value }))}
+                          />
+                          <button
+                            className={`${smallBtn} !border-accent !text-accent`}
+                            disabled={ytBusy === l.id || !(ytLink[l.id] ?? "").trim()}
+                            onClick={() => saveYouTube(l)}
+                          >
+                            {ytBusy === l.id ? "Saving..." : "Save YouTube video"}
+                          </button>
+                          {ytId && !(ytLink[l.id] ?? "").trim() && (
+                            <button className={smallBtn} disabled={!(ytLen[l.id] ?? "").trim()} onClick={() => saveLength(l)}>
+                              Update length only
+                            </button>
+                          )}
+                          {ytId && (
+                            <button className={smallBtn} onClick={() => removeVideo(l)}>
+                              Remove video
+                            </button>
+                          )}
+                        </div>
+                        {ytNote[l.id] && <p className="mt-2 text-xs text-muted">{ytNote[l.id]}</p>}
+                      </div>
+
+                      <div>
+                        <p className="mb-2 text-[10px] font-semibold tracking-widest text-muted uppercase">
+                          Or upload a file (mp4 or webm, max {MAX_MB} MB)
                         </p>
                         <input
                           type="file"
@@ -311,6 +489,31 @@ export default function CourseManager({ modules }: { modules: Module[] }) {
               );
             })}
           </ul>
+
+          <details className="mt-4 rounded-control border border-line bg-surface-2 p-4">
+            <summary className="cursor-pointer text-xs font-semibold tracking-wider text-accent uppercase">
+              Add many lessons from YouTube links
+            </summary>
+            <p className="mt-3 text-xs leading-relaxed text-muted">
+              One lesson per line, in the order you want. Write <b>Title | link</b>, or just the link and we will read
+              the title from YouTube. New lessons go to the end of this module.
+            </p>
+            <textarea
+              rows={6}
+              className={`${inputCls} mt-3 font-mono !text-xs`}
+              placeholder={"What is a pip? | https://youtu.be/xxxxxxxxxxx\nhttps://youtu.be/yyyyyyyyyyy"}
+              value={bulkText[m.id] ?? ""}
+              onChange={(e) => setBulkText((n) => ({ ...n, [m.id]: e.target.value }))}
+            />
+            <button
+              className={`${smallBtn} mt-3 !border-accent !text-accent`}
+              disabled={bulkBusy === m.id || !(bulkText[m.id] ?? "").trim()}
+              onClick={() => bulkAdd(m)}
+            >
+              {bulkBusy === m.id ? "Adding..." : "Add these lessons"}
+            </button>
+            {bulkMsg[m.id] && <p className="mt-3 break-words text-xs text-muted">{bulkMsg[m.id]}</p>}
+          </details>
 
           <div className="mt-4 flex gap-3">
             <input

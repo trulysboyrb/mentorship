@@ -7,6 +7,7 @@ type Content = {
   notes: string | null;
   video_path: string | null;
   video_url: string | null;
+  duration_seconds: number | null;
 };
 type RawLesson = {
   id: string;
@@ -38,7 +39,7 @@ export default async function AdminCoursesPage() {
   const { data } = await supabase
     .from("modules")
     .select(
-      "id, position, title, lessons(id, position, title, lesson_content(notes, video_path, video_url))"
+      "id, position, title, lessons(id, position, title, lesson_content(notes, video_path, video_url, duration_seconds))"
     )
     .order("position")
     .order("position", { referencedTable: "lessons" });

@@ -8,6 +8,7 @@ import { buildCertificatePdf, makeSerial } from "@/lib/certificatePdf";
 import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
 import AdminDevicesModal from "@/components/AdminDevicesModal";
+import DeleteStudentModal from "@/components/DeleteStudentModal";
 import { formatGMD, priceFor } from "@/lib/pricing";
 import { clearedViaLabel, type ClearedVia } from "@/lib/paymentMethods";
 
@@ -51,6 +52,7 @@ export default function AdminStudents({
   const [certFor, setCertFor] = useState<string | null>(null);
   const [notesFor, setNotesFor] = useState<string | null>(null);
   const [devicesFor, setDevicesFor] = useState<string | null>(null);
+  const [deleteFor, setDeleteFor] = useState<string | null>(null);
 
   const shown = students.filter((s) => {
     if (filter === "all") return true;
@@ -261,6 +263,12 @@ export default function AdminStudents({
                       >
                         {cleared ? "Unclear" : "Clear"}
                       </button>
+                      <button
+                        onClick={() => setDeleteFor(s.id)}
+                        className={`${actionBtn} border-line text-muted hover:border-danger hover:text-danger`}
+                      >
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -288,6 +296,16 @@ export default function AdminStudents({
         <AdminDevicesModal
           student={students.find((x) => x.id === devicesFor)!}
           onClose={() => setDevicesFor(null)}
+        />
+      )}
+      {deleteFor && students.find((x) => x.id === deleteFor) && (
+        <DeleteStudentModal
+          student={students.find((x) => x.id === deleteFor)!}
+          onClose={() => setDeleteFor(null)}
+          onDeleted={() => {
+            setDeleteFor(null);
+            router.refresh();
+          }}
         />
       )}
       {notesFor && students.find((x) => x.id === notesFor) && (

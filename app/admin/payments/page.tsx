@@ -26,7 +26,7 @@ export default async function AdminPaymentsPage() {
   const [{ data: pays, error }, { data: events }, { data: rate }] = await Promise.all([
     supabase
       .from("payments")
-      .select("id, user_id, method, provider, status, amount_gmd, amount_usd, note, created_at, paid_at, profiles(full_name, email)")
+      .select("id, user_id, method, provider, status, amount_gmd, amount_usd, note, created_at, paid_at, payer_name, payer_email, profiles(full_name, email)")
       .order("created_at", { ascending: false })
       .limit(100),
     supabase
@@ -46,7 +46,11 @@ export default async function AdminPaymentsPage() {
   type Row = NonNullable<typeof pays>[number] & { profiles?: { full_name?: string; email?: string } | { full_name?: string; email?: string }[] | null };
   const who = (p: Row) => {
     const pr = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
-    return { name: pr?.full_name ?? "Unknown", email: pr?.email ?? "" };
+    const snap = p as { payer_name?: string | null; payer_email?: string | null; user_id?: string | null };
+    return {
+      name: pr?.full_name ?? (snap.payer_name ? `${snap.payer_name} (deleted)` : "Unknown"),
+      email: pr?.email ?? snap.payer_email ?? "",
+    };
   };
 
   return (

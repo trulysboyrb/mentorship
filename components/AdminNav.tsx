@@ -4,6 +4,7 @@ import SignOutButton from "@/components/SignOutButton";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 
 const LINKS: [string, string][] = [
+  ["/admin/overview", "Overview"],
   ["/admin", "Students"],
   ["/admin/courses", "Courses"],
   ["/admin/quizzes", "Quizzes"],

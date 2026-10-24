@@ -86,7 +86,10 @@ export default function SignupPage() {
     const { data, error } = await createClient().auth.signUp({
       email,
       password,
-      options: { data: { ...meta, referral_code: normalizeReferralCode(referral) } },
+      options: {
+        data: { ...meta, referral_code: normalizeReferralCode(referral) },
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/confirmed`,
+      },
     });
 
     if (error) {

@@ -1,4 +1,4 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   DEVICE_COOKIE,
@@ -6,7 +6,7 @@ import {
   isValidDeviceToken,
 } from "@/lib/deviceCookie";
 
-const PROTECTED = ["/dashboard", "/admin", "/pending", "/profile", "/tools", "/device-limit"];
+const PROTECTED = ["/dashboard", "/admin", "/pending", "/profile", "/tools", "/device-limit", "/pay"];
 const AUTH_PAGES = ["/login", "/signup"];
 
 export async function updateSession(request: NextRequest) {
@@ -43,9 +43,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(
-          cookiesToSet: { name: string; value: string; options: CookieOptions }[]
-        ) {
+        setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );

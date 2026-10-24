@@ -11,6 +11,7 @@ const LINKS: [string, string][] = [
   ["/admin/classes", "Live classes"],
   ["/admin/announcements", "Announcements"],
   ["/admin/questions", "Questions"],
+  ["/admin/payments", "Payments"],
   ["/admin/payouts", "Payouts"],
   ["/admin/analytics", "Analytics"],
   ["/admin/settings", "Settings"],

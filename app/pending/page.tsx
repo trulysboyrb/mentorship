@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import { whatsappLink } from "@/lib/whatsapp";
 import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
 import AuthCard from "@/components/AuthCard";
+import PayButtons from "@/components/PayButtons";
+import { getAvailability } from "@/lib/payments/available";
 
 export default async function PendingPage() {
   const supabase = await createClient();
@@ -16,6 +18,7 @@ export default async function PendingPage() {
     .eq("id", user!.id)
     .single();
 
+  const payAvail = await getAvailability(supabase);
   const referred = !!profile?.referral_discount;
   const price = priceFor(profile?.learning_mode, referred);
   const href = whatsappLink(
@@ -28,8 +31,8 @@ export default async function PendingPage() {
   return (
     <AuthCard title="Account created" subtitle="Complete your payment to unlock courses">
       <p className="text-center text-sm text-muted">
-        Message us on WhatsApp to arrange payment. Once we confirm it, your
-        courses unlock automatically.
+        Pay online with Wave, Card or Crypto and your courses unlock automatically once the
+        payment is verified. Or message us on WhatsApp and we will confirm it.
       </p>
 
       <div className="mt-6 border border-line bg-black p-4 text-center">
@@ -42,14 +45,10 @@ export default async function PendingPage() {
         )}
       </div>
 
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-6 block rounded-control bg-accent px-6 py-3.5 text-center text-xs font-extrabold tracking-wider text-black uppercase"
-      >
-        Continue on WhatsApp
-      </a>
+      <PayButtons
+        waHref={href}
+        enabled={{ wave: payAvail.wave.ok, card: payAvail.card.ok, crypto: payAvail.crypto.ok }}
+      />
       <Link
         href="/dashboard"
         className="mt-5 block text-center text-xs text-muted hover:text-white"

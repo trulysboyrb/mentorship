@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import AdminNav from "@/components/AdminNav";
 import MaxDevicesForm from "@/components/MaxDevicesForm";
 import PayoutSettingsForm from "@/components/PayoutSettingsForm";
+import CryptoRateForm from "@/components/CryptoRateForm";
 
 export default async function AdminSettingsPage() {
   const supabase = await createClient();
@@ -12,10 +13,11 @@ export default async function AdminSettingsPage() {
   const { data: me } = await supabase.from("profiles").select("role").eq("id", user!.id).single();
   if (me?.role !== "admin") redirect("/dashboard");
 
-  const [{ data: max }, { data: reward }, { data: minPayout }] = await Promise.all([
+  const [{ data: max }, { data: reward }, { data: minPayout }, { data: rate }] = await Promise.all([
     supabase.rpc("max_devices"),
     supabase.rpc("referral_reward"),
     supabase.rpc("min_payout"),
+    supabase.rpc("get_gmd_per_usd"),
   ]);
   const current = typeof max === "number" ? max : 2;
 
@@ -36,6 +38,9 @@ export default async function AdminSettingsPage() {
         reward={typeof reward === "number" ? reward : 500}
         minPayout={typeof minPayout === "number" ? minPayout : 500}
       />
+
+      <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Crypto price</h3>
+      <CryptoRateForm current={rate === null || rate === undefined ? null : Number(rate)} />
     </main>
   );
 }

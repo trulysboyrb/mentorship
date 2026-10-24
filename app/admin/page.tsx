@@ -28,7 +28,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by")
+      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by, cleared_via")
       .eq("role", "student")
       .order("created_at", { ascending: false }),
     supabase.rpc("admin_student_stats"),
@@ -84,6 +84,7 @@ export default async function AdminPage() {
     whatsapp: s.whatsapp,
     learning_mode: s.learning_mode,
     payment_status: s.payment_status,
+    cleared_via: s.cleared_via ?? null,
     created_at: s.created_at,
     referral_discount: !!s.referral_discount,
     // Referrers are always students or admin; admins are not in this list, so fall back to null.

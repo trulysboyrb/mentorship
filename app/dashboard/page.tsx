@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { checkDevice } from "@/lib/device";
 import { whatsappLink } from "@/lib/whatsapp";
+import PayButtons from "@/components/PayButtons";
+import { getAvailability } from "@/lib/payments/available";
 import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
 import DashboardShell from "@/components/DashboardShell";
 import Sidebar from "@/components/Sidebar";
@@ -163,6 +165,7 @@ export default async function DashboardPage({
     videoSrc = signed?.signedUrl ?? null;
   }
 
+  const payAvail = await getAvailability(supabase);
   const referred = !!profile?.referral_discount;
   const price = priceFor(profile?.learning_mode, referred);
   const waHref = whatsappLink(
@@ -308,8 +311,8 @@ export default async function DashboardPage({
           <div className="absolute inset-x-6 top-40 mx-auto max-w-md rounded-card border border-line bg-surface p-8 text-center shadow-2xl">
             <h3 className="text-xl font-black">Unlock your courses</h3>
             <p className="mt-3 text-sm text-muted">
-              Complete your payment on WhatsApp. This page unlocks by itself
-              as soon as we confirm it, no need to reload.
+              Pay online with Wave, Card or Crypto and this page unlocks by itself the moment
+              the payment is verified. Or pay on WhatsApp and we will confirm it.
             </p>
             <p className="mt-4 text-sm">
               <span className="text-muted">Your price: </span>
@@ -320,10 +323,10 @@ export default async function DashboardPage({
                 </span>
               )}
             </p>
-            <a href={waHref} target="_blank" rel="noopener noreferrer"
-              className="mt-6 block rounded-control bg-accent px-6 py-3.5 text-xs font-extrabold tracking-wider text-black uppercase">
-              Pay via WhatsApp
-            </a>
+            <PayButtons
+              waHref={waHref}
+              enabled={{ wave: payAvail.wave.ok, card: payAvail.card.ok, crypto: payAvail.crypto.ok }}
+            />
           </div>
         )}
       </div>

@@ -9,6 +9,7 @@ import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
 import AdminDevicesModal from "@/components/AdminDevicesModal";
 import { formatGMD, priceFor } from "@/lib/pricing";
+import { clearedViaLabel, type ClearedVia } from "@/lib/paymentMethods";
 
 type Student = {
   id: string;
@@ -17,6 +18,7 @@ type Student = {
   whatsapp: string | null;
   learning_mode: string | null;
   payment_status: string;
+  cleared_via: string | null;
   created_at: string;
   referral_discount: boolean;
   referrer_name: string | null;
@@ -203,6 +205,11 @@ export default function AdminStudents({
                   </td>
                   <td className={`px-4 py-3 ${cleared ? "text-accent" : "text-danger"}`}>
                     {cleared ? "Cleared" : "Pending"}
+                    {cleared && s.cleared_via && (
+                      <span className="mt-0.5 block text-[10px] font-semibold tracking-widest text-muted uppercase">
+                        via {clearedViaLabel(s.cleared_via as ClearedVia)}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-muted">
                     {cleared ? `${completed[s.id] ?? 0} / ${totalLessons}` : "-"}

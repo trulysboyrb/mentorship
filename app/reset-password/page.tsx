@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthCard from "@/components/AuthCard";
-import { inputCls, labelCls, primaryBtn } from "@/components/ui";
+import { labelCls, primaryBtn } from "@/components/ui";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -62,14 +63,14 @@ export default function ResetPasswordPage() {
       <form onSubmit={onSubmit} className="space-y-5">
         <div>
           <label className={labelCls} htmlFor="password">New password</label>
-          <input id="password" type="password" required autoComplete="new-password"
-            className={inputCls} placeholder="at least 8 characters" value={password}
+          <PasswordInput id="password" required autoComplete="new-password"
+            placeholder="at least 8 characters" value={password}
             onChange={(e) => setPassword(e.target.value)} />
         </div>
         <div>
           <label className={labelCls} htmlFor="confirm">Confirm password</label>
-          <input id="confirm" type="password" required autoComplete="new-password"
-            className={inputCls} placeholder="repeat the password" value={confirm}
+          <PasswordInput id="confirm" required autoComplete="new-password"
+            placeholder="repeat the password" value={confirm}
             onChange={(e) => setConfirm(e.target.value)} />
         </div>
         {error && <p className="text-sm text-danger">{error}</p>}

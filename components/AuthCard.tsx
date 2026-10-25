@@ -1,5 +1,8 @@
+import Link from "next/link";
 import LegalLinks from "@/components/LegalLinks";
+import BrandPanel from "@/components/BrandPanel";
 
+// Shared frame for login, signup, forgot / reset password and the email-confirmed page.
 export default function AuthCard({
   title,
   subtitle,
@@ -10,15 +13,22 @@ export default function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-md rounded-card border border-line bg-surface p-8 sm:p-10">
-        <h1 className="text-center text-3xl font-black tracking-tight">
-          {title}
-        </h1>
-        <p className="mt-2 text-center text-sm text-muted">{subtitle}</p>
-        <div className="mt-8">{children}</div>
-      </div>
-      <LegalLinks className="mt-6" />
-    </main>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <BrandPanel />
+      <main className="flex flex-col items-center justify-center px-4 py-10">
+        <div className="anim-fade-up w-full max-w-md rounded-card border border-line bg-surface p-8 sm:p-10">
+          <Link href="/" className="mb-6 block text-center text-xs font-black tracking-tight text-accent lg:hidden">
+            APEXTRADE ACADEMY
+          </Link>
+          <h1 className="text-center text-3xl font-black tracking-tight">{title}</h1>
+          <p className="mt-2 text-center text-sm text-muted">{subtitle}</p>
+          <div className="mt-8">{children}</div>
+        </div>
+        <Link href="/" className="mt-6 text-xs text-muted hover:text-white">
+          &larr; Back to home
+        </Link>
+        <LegalLinks className="mt-4" />
+      </main>
+    </div>
   );
 }

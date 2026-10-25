@@ -15,6 +15,7 @@ import { youTubeIdFromStored } from "@/lib/youtube";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
 import TopBar from "@/components/TopBar";
+import { avatarUrl } from "@/lib/avatar";
 import NextClassBanner from "@/components/NextClassBanner";
 import type { QuizStatus } from "@/components/Sidebar";
 import type { ClassRow } from "@/lib/classes";
@@ -49,7 +50,7 @@ export default async function DashboardPage({
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, email, learning_mode, payment_status, role, referral_discount")
+    .select("full_name, email, learning_mode, payment_status, role, referral_discount, avatar_path")
     .eq("id", user!.id)
     .single();
 
@@ -200,6 +201,7 @@ export default async function DashboardPage({
     >
       <TopBar
         fullName={profile?.full_name ?? ""}
+        avatarUrl={avatarUrl(profile?.avatar_path)}
         isAdmin={isAdmin}
         showTools={cleared}
       />

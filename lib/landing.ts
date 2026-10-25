@@ -2,7 +2,7 @@
 
 export const STEPS: { title: string; text: string }[] = [
   { title: "Create your account", text: "Sign up in a minute and pick online or in-person learning." },
-  { title: "Pay on WhatsApp", text: "Message us, pay, and we unlock your courses straight away." },
+  { title: "Pay your way", text: "Pay with Wave, card or crypto and your courses unlock by themselves, or pay on WhatsApp and we confirm it." },
   { title: "Learn module by module", text: "Watch each lesson, pass the quiz, and unlock the next one." },
   { title: "Earn your certificate", text: "Finish the course and we issue your certificate." },
 ];
@@ -14,7 +14,7 @@ export const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "How do I pay?",
-    a: "After you sign up, message us on WhatsApp and we arrange payment with you. It is a one-time payment, and your courses unlock as soon as we confirm it.",
+    a: "After you sign up you can pay online with Wave, card or crypto, and your courses unlock automatically once the payment is verified. You can also pay on WhatsApp and we confirm it by hand. It is a one-time payment.",
   },
   {
     q: "What is the difference between Online and In Person?",

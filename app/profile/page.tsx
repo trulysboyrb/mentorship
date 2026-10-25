@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { checkDevice, currentDeviceToken } from "@/lib/device";
 import TopBar from "@/components/TopBar";
+import AvatarUploader from "@/components/AvatarUploader";
+import { avatarUrl } from "@/lib/avatar";
 import ProfileForm from "@/components/ProfileForm";
 import LegalLinks from "@/components/LegalLinks";
 import PdfPreview from "@/components/PdfPreview";
@@ -24,7 +26,7 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase
     .from("profiles")
     .select(
-      "full_name, email, whatsapp, country, learning_mode, experience, payment_status, role, referral_code, referral_discount"
+      "full_name, email, whatsapp, country, learning_mode, experience, payment_status, role, referral_code, referral_discount, avatar_path"
     )
     .eq("id", user.id)
     .single();
@@ -125,6 +127,7 @@ export default async function ProfilePage() {
     <>
       <TopBar
         fullName={profile.full_name}
+        avatarUrl={avatarUrl(profile.avatar_path)}
         isAdmin={isAdmin}
         showTools={cleared || isAdmin}
         left={
@@ -142,6 +145,8 @@ export default async function ProfilePage() {
             {cleared ? "Cleared" : "Payment pending"}
           </span>
         </p>
+
+        <AvatarUploader userId={user.id} fullName={profile.full_name} currentPath={profile.avatar_path} />
 
         <RealtimeRefresh table="certificates" filter={`user_id=eq.${user.id}`} />
         <RealtimeRefresh table="resources" />

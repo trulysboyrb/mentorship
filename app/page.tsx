@@ -1,15 +1,30 @@
 import Link from "next/link";
 import LegalLinks from "@/components/LegalLinks";
 import ThemeToggle from "@/components/ThemeToggle";
+import Reveal from "@/components/Reveal";
+import RotatingWord from "@/components/RotatingWord";
+import HeroChart from "@/components/HeroChart";
+import Ticker from "@/components/Ticker";
 import { FAQ, STEPS, TESTIMONIALS } from "@/lib/landing";
 import { PRICES, REFERRAL_DISCOUNT_PERCENT, formatGMD } from "@/lib/pricing";
 
 const primary =
-  "rounded-(--radius-control) bg-white px-10 py-3 text-center text-xs font-extrabold tracking-wider text-black uppercase hover:bg-accent";
+  "rounded-(--radius-control) bg-white px-10 py-3.5 text-center text-xs font-extrabold tracking-wider text-black uppercase transition hover:bg-accent hover:-translate-y-0.5";
 const secondary =
-  "rounded-(--radius-control) border border-line px-10 py-3 text-center text-xs font-extrabold tracking-wider uppercase hover:border-accent";
+  "rounded-(--radius-control) border border-line px-10 py-3.5 text-center text-xs font-extrabold tracking-wider uppercase transition hover:border-accent hover:-translate-y-0.5";
 
 const heading = "text-xs font-extrabold tracking-widest text-accent uppercase";
+const title = "mt-3 text-3xl font-black tracking-tight sm:text-4xl";
+
+// Everything in this list exists on the site today.
+const FEATURES = [
+  { icon: "▶", name: "Video lessons", text: "Short lessons in a clear order, with notes and downloads for each one." },
+  { icon: "✓", name: "Module quizzes", text: "Pass the quiz to unlock the next module, so you really learn it." },
+  { icon: "●", name: "Live classes", text: "A schedule with reminders, so you never miss a session." },
+  { icon: "↗", name: "Practice chart", text: "A live chart under every lesson, so you can see examples as you learn." },
+  { icon: "★", name: "Certificate", text: "Finish the course and get a certificate with your name on it." },
+  { icon: "▢", name: "Works on your phone", text: "Install it like an app and learn anywhere on your phone or laptop." },
+];
 
 export default function LandingPage() {
   const plans = [
@@ -26,73 +41,139 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="relative">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
-        <span className="text-sm font-black tracking-tight text-accent">APEXTRADE ACADEMY</span>
-        <div className="flex items-center gap-3">
-          <Link href="/login" className="text-xs font-semibold tracking-wider text-muted uppercase hover:text-white">
-            Login
-          </Link>
-          <ThemeToggle />
+    <div className="relative overflow-x-clip">
+      <noscript>
+        <style>{`.reveal,.anim-fade-up,.anim-fade-in,.candle{opacity:1!important;transform:none!important}.chart-line{stroke-dashoffset:0!important}`}</style>
+      </noscript>
+
+      <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/70 backdrop-blur">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
+          <span className="text-sm font-black tracking-tight text-accent">APEXTRADE ACADEMY</span>
+          <nav className="flex items-center gap-5">
+            <a href="#prices" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
+              Prices
+            </a>
+            <a href="#faq" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
+              FAQ
+            </a>
+            <Link href="/login" className="text-xs font-semibold tracking-wider text-muted uppercase hover:text-white">
+              Login
+            </Link>
+            <Link href="/signup" className="hidden border border-accent px-4 py-2 text-xs font-extrabold tracking-wider text-accent uppercase transition hover:bg-accent hover:text-black sm:block">
+              Sign up
+            </Link>
+            <ThemeToggle />
+          </nav>
         </div>
       </header>
 
       <main>
         {/* Hero */}
-        <section className="mx-auto flex max-w-5xl flex-col items-center px-6 pt-16 pb-24 text-center sm:pt-24">
-          <h1 className="text-6xl leading-[0.95] font-black tracking-tight sm:text-7xl">
-            ApexTrade
-            <br />
-            <span className="text-muted">Academy</span>
-          </h1>
-          <p className="mt-6 max-w-md text-muted">
-            Learn modern trading and blockchain skills, structured into clear modules.
-          </p>
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <Link href="/signup" className={primary}>Sign up</Link>
-            <Link href="/login" className={secondary}>Login</Link>
+        <section className="relative">
+          <div className="grid-bg pointer-events-none absolute inset-0" />
+          <div className="anim-glow pointer-events-none absolute top-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-accent/20 blur-3xl" />
+          <div className="relative mx-auto flex max-w-5xl flex-col items-center px-6 pt-16 pb-16 text-center sm:pt-24">
+            <p className="anim-fade-up border border-line bg-surface/70 px-4 py-1.5 text-[10px] font-extrabold tracking-widest text-muted uppercase">
+              Trading and blockchain education
+            </p>
+            <h1 className="anim-fade-up mt-6 text-5xl leading-[1.02] font-black tracking-tight sm:text-7xl" style={{ "--d": "0.1s" } as React.CSSProperties}>
+              Learn to trade
+              <br />
+              <RotatingWord words={["Forex", "Crypto", "the Markets"]} />
+            </h1>
+            <p className="anim-fade-up mt-6 max-w-md text-muted" style={{ "--d": "0.2s" } as React.CSSProperties}>
+              Modern trading and blockchain skills, structured into clear modules you can follow at your own pace.
+            </p>
+            <div className="anim-fade-up mt-10 flex flex-col gap-4 sm:flex-row" style={{ "--d": "0.3s" } as React.CSSProperties}>
+              <Link href="/signup" className={primary}>Sign up</Link>
+              <Link href="/login" className={secondary}>Login</Link>
+            </div>
+
+            <div className="anim-fade-in mt-14 w-full max-w-2xl" style={{ "--d": "0.5s" } as React.CSSProperties}>
+              <div className="anim-float border border-line bg-surface/80 p-5 shadow-2xl backdrop-blur">
+                <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-widest text-muted uppercase">
+                  <span className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    Practice chart
+                  </span>
+                  <span>Illustration</span>
+                </div>
+                <HeroChart className="h-44 w-full sm:h-56" />
+              </div>
+            </div>
           </div>
-          <a href="#how" className="mt-12 text-xs tracking-wider text-muted uppercase hover:text-white">
-            See how it works ↓
-          </a>
+        </section>
+
+        <Ticker />
+
+        {/* Features */}
+        <section className="mx-auto max-w-5xl px-6 py-20">
+          <Reveal>
+            <h2 className={heading}>What you get</h2>
+            <p className={title}>Everything you need to learn properly.</p>
+          </Reveal>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {FEATURES.map((f, i) => (
+              <Reveal key={f.name} delay={(i % 3) * 0.08}>
+                <div className="lift h-full rounded-(--radius-card) border border-line bg-surface p-6">
+                  <span className="flex h-10 w-10 items-center justify-center border border-accent/50 text-accent" aria-hidden>
+                    {f.icon}
+                  </span>
+                  <h3 className="mt-5 text-sm font-bold">{f.name}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted">{f.text}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </section>
 
         {/* How it works */}
-        <section id="how" className="mx-auto max-w-5xl scroll-mt-8 px-6 py-16">
-          <h2 className={heading}>How it works</h2>
-          <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section id="how" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+          <Reveal>
+            <h2 className={heading}>How it works</h2>
+            <p className={title}>Four steps, start to finish.</p>
+          </Reveal>
+          <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {STEPS.map((s, i) => (
-              <li key={s.title} className="rounded-(--radius-card) border border-line bg-surface p-6">
-                <span className="text-3xl font-black text-accent">{i + 1}</span>
-                <h3 className="mt-4 text-sm font-bold">{s.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">{s.text}</p>
+              <li key={s.title}>
+                <Reveal delay={i * 0.1}>
+                  <div className="lift h-full rounded-(--radius-card) border border-line bg-surface p-6">
+                    <span className="text-4xl font-black text-accent">{i + 1}</span>
+                    <h3 className="mt-4 text-sm font-bold">{s.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted">{s.text}</p>
+                  </div>
+                </Reveal>
               </li>
             ))}
           </ol>
         </section>
 
         {/* Prices */}
-        <section id="prices" className="mx-auto max-w-5xl scroll-mt-8 px-6 py-16">
-          <h2 className={heading}>Price</h2>
-          <p className="mt-3 max-w-xl text-sm text-muted">
-            One payment, no subscription. Pay on WhatsApp after you sign up and your courses unlock as soon as we confirm it.
-          </p>
+        <section id="prices" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+          <Reveal>
+            <h2 className={heading}>Price</h2>
+            <p className="mt-3 max-w-xl text-sm text-muted">
+              One payment, no subscription. Pay online with Wave, card or crypto, or on WhatsApp. Your courses unlock as soon as the payment is confirmed.
+            </p>
+          </Reveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            {plans.map((p) => (
-              <div key={p.name} className="flex flex-col rounded-(--radius-card) border border-line bg-surface p-8">
-                <h3 className="text-xs font-extrabold tracking-widest uppercase">{p.name}</h3>
-                <p className="mt-4 text-4xl font-black">{formatGMD(p.price)}</p>
-                <p className="mt-1 text-xs text-muted">one-time payment</p>
-                <ul className="mt-6 flex-1 space-y-3 text-sm text-white/80">
-                  {p.points.map((pt) => (
-                    <li key={pt} className="flex gap-3">
-                      <span className="text-accent" aria-hidden>✓</span>
-                      {pt}
-                    </li>
-                  ))}
-                </ul>
-                <Link href="/signup" className={`${primary} mt-8`}>Get started</Link>
-              </div>
+            {plans.map((p, i) => (
+              <Reveal key={p.name} delay={i * 0.1}>
+                <div className="lift flex h-full flex-col rounded-(--radius-card) border border-line bg-surface p-8">
+                  <h3 className="text-xs font-extrabold tracking-widest uppercase">{p.name}</h3>
+                  <p className="mt-4 text-4xl font-black">{formatGMD(p.price)}</p>
+                  <p className="mt-1 text-xs text-muted">one-time payment</p>
+                  <ul className="mt-6 flex-1 space-y-3 text-sm text-white/80">
+                    {p.points.map((pt) => (
+                      <li key={pt} className="flex gap-3">
+                        <span className="text-accent" aria-hidden>✓</span>
+                        {pt}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link href="/signup" className={`${primary} mt-8`}>Get started</Link>
+                </div>
+              </Reveal>
             ))}
           </div>
           <p className="mt-5 text-xs text-muted">
@@ -103,47 +184,58 @@ export default function LandingPage() {
         {/* Real testimonials only: hidden until you add some in lib/landing.ts */}
         {TESTIMONIALS.length > 0 && (
           <section className="mx-auto max-w-5xl px-6 py-16">
-            <h2 className={heading}>What students say</h2>
+            <Reveal>
+              <h2 className={heading}>What students say</h2>
+            </Reveal>
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {TESTIMONIALS.map((t) => (
-                <figure key={t.name} className="rounded-(--radius-card) border border-line bg-surface p-6">
-                  <blockquote className="text-sm leading-relaxed text-white/80">&ldquo;{t.text}&rdquo;</blockquote>
-                  <figcaption className="mt-4 text-xs">
-                    <span className="font-bold">{t.name}</span>
-                    {t.detail && <span className="text-muted"> &middot; {t.detail}</span>}
-                  </figcaption>
-                </figure>
+              {TESTIMONIALS.map((t, i) => (
+                <Reveal key={t.name} delay={i * 0.08}>
+                  <figure className="rounded-(--radius-card) border border-line bg-surface p-6">
+                    <blockquote className="text-sm leading-relaxed text-white/80">&ldquo;{t.text}&rdquo;</blockquote>
+                    <figcaption className="mt-4 text-xs">
+                      <span className="font-bold">{t.name}</span>
+                      {t.detail && <span className="text-muted"> &middot; {t.detail}</span>}
+                    </figcaption>
+                  </figure>
+                </Reveal>
               ))}
             </div>
           </section>
         )}
 
         {/* FAQ */}
-        <section id="faq" className="mx-auto max-w-3xl scroll-mt-8 px-6 py-16">
-          <h2 className={heading}>Questions</h2>
-          <div className="mt-8 divide-y divide-line border-y border-line">
-            {FAQ.map((f) => (
-              <details key={f.q} className="group py-5">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-semibold">
-                  {f.q}
-                  <span className="text-accent transition group-open:rotate-45" aria-hidden>+</span>
-                </summary>
-                <p className="mt-3 text-sm leading-relaxed text-muted">{f.a}</p>
-              </details>
-            ))}
-          </div>
+        <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-16">
+          <Reveal>
+            <h2 className={heading}>Questions</h2>
+          </Reveal>
+          <Reveal delay={0.05}>
+            <div className="mt-8 divide-y divide-line border-y border-line">
+              {FAQ.map((f) => (
+                <details key={f.q} className="group py-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-semibold">
+                    {f.q}
+                    <span className="text-accent transition group-open:rotate-45" aria-hidden>+</span>
+                  </summary>
+                  <p className="mt-3 text-sm leading-relaxed text-muted">{f.a}</p>
+                </details>
+              ))}
+            </div>
+          </Reveal>
         </section>
 
         {/* Final call */}
-        <section className="mx-auto flex max-w-5xl flex-col items-center px-6 py-20 text-center">
-          <h2 className="text-3xl font-black tracking-tight">Ready to start?</h2>
-          <p className="mt-3 max-w-md text-sm text-muted">
-            Create your account in a minute. Trading carries risk, and everything here is for education only.
-          </p>
-          <div className="mt-8 flex flex-col gap-4 sm:flex-row">
-            <Link href="/signup" className={primary}>Sign up</Link>
-            <Link href="/login" className={secondary}>Login</Link>
-          </div>
+        <section className="relative">
+          <div className="anim-glow pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/15 blur-3xl" />
+          <Reveal className="relative mx-auto flex max-w-5xl flex-col items-center px-6 py-24 text-center">
+            <h2 className="text-4xl font-black tracking-tight">Ready to start?</h2>
+            <p className="mt-3 max-w-md text-sm text-muted">
+              Create your account in a minute. Trading carries risk, and everything here is for education only.
+            </p>
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+              <Link href="/signup" className={primary}>Sign up</Link>
+              <Link href="/login" className={secondary}>Login</Link>
+            </div>
+          </Reveal>
         </section>
       </main>
 

@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
+import PasswordInput from "@/components/PasswordInput";
+import { passwordStrength, validEmail } from "@/lib/passwordStrength";
 import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
 import { normalizeReferralCode } from "@/lib/referral";
 
@@ -24,6 +26,7 @@ export default function SignupPage() {
     heard_from: "",
     referral: "",
   });
+  const [step, setStep] = useState<1 | 2>(1);
   const [codeState, setCodeState] = useState<CodeState>("idle");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -58,11 +61,30 @@ export default function SignupPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function goNext(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (form.full_name.trim().length < 2) {
+      setError("Please enter your full name.");
+      return;
+    }
+    if (!validEmail(form.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setStep(2);
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
 
     if (form.password.length < 8) {
+      setStep(1);
       setError("Password must be at least 8 characters.");
       return;
     }
@@ -100,6 +122,7 @@ export default function SignupPage() {
 
     // Supabase returns a user with no identities if the email already exists.
     if (data.user && data.user.identities?.length === 0) {
+      setStep(1);
       setError("An account with this email already exists. Try logging in.");
       setLoading(false);
       return;
@@ -134,34 +157,66 @@ export default function SignupPage() {
   }
 
   const referred = codeState === "valid";
+  const strength = passwordStrength(form.password);
 
   return (
     <AuthCard title="Create Account" subtitle="Join the academy">
-      <form onSubmit={onSubmit} className="space-y-5">
-        <div>
-          <label className={labelCls} htmlFor="full_name">Full name</label>
-          <input id="full_name" required className={inputCls} placeholder="your full name"
-            value={form.full_name} onChange={(e) => set("full_name", e.target.value)} />
-        </div>
-        <div>
-          <label className={labelCls} htmlFor="email">Email</label>
-          <input id="email" type="email" required autoComplete="email" className={inputCls}
-            placeholder="enter email" value={form.email}
-            onChange={(e) => set("email", e.target.value)} />
-        </div>
-        <div>
-          <label className={labelCls} htmlFor="password">Password</label>
-          <input id="password" type="password" required autoComplete="new-password"
-            className={inputCls} placeholder="at least 8 characters" value={form.password}
-            onChange={(e) => set("password", e.target.value)} />
-        </div>
-        <div>
+      <ol className="mb-8 grid grid-cols-2 gap-3" aria-label="Sign up progress">
+        {["Account", "Your details"].map((label, i) => (
+          <li key={label}>
+            <div className={`h-1 transition-colors duration-500 ${step >= i + 1 ? "bg-accent" : "bg-line"}`} />
+            <p className={`mt-2 text-[10px] font-extrabold tracking-widest uppercase ${step === i + 1 ? "text-white" : "text-muted"}`}>
+              {i + 1}. {label}
+            </p>
+          </li>
+        ))}
+      </ol>
+
+      {step === 1 ? (
+        <form onSubmit={goNext} className="space-y-5" key="step1">
+          <div className="anim-fade-up">
+            <label className={labelCls} htmlFor="full_name">Full name</label>
+            <input id="full_name" required autoComplete="name" className={inputCls} placeholder="your full name"
+              value={form.full_name} onChange={(e) => set("full_name", e.target.value)} />
+          </div>
+          <div className="anim-fade-up" style={{ "--d": "0.06s" } as React.CSSProperties}>
+            <label className={labelCls} htmlFor="email">Email</label>
+            <input id="email" type="email" required autoComplete="email" className={inputCls}
+              placeholder="enter email" value={form.email}
+              onChange={(e) => set("email", e.target.value)} />
+          </div>
+          <div className="anim-fade-up" style={{ "--d": "0.12s" } as React.CSSProperties}>
+            <label className={labelCls} htmlFor="password">Password</label>
+            <PasswordInput id="password" required autoComplete="new-password"
+              placeholder="at least 8 characters" value={form.password}
+              onChange={(e) => set("password", e.target.value)} />
+            {form.password && (
+              <div className="mt-2" aria-live="polite">
+                <div className="grid grid-cols-4 gap-1">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className={`h-1 transition-colors ${
+                      strength.score >= n ? (strength.score <= 1 ? "bg-danger" : "bg-accent") : "bg-line"
+                    }`} />
+                  ))}
+                </div>
+                <p className="mt-1 text-[11px] text-muted">{strength.label}</p>
+              </div>
+            )}
+          </div>
+
+          {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+
+          <button type="submit" className={primaryBtn}>Continue</button>
+        </form>
+      ) : (
+      <form onSubmit={onSubmit} className="space-y-5" key="step2">
+        <div className="anim-fade-up">
           <label className={labelCls} htmlFor="whatsapp">WhatsApp number</label>
           <input id="whatsapp" type="tel" required className={inputCls}
             placeholder="include country code, e.g. 220..." value={form.whatsapp}
             onChange={(e) => set("whatsapp", e.target.value)} />
         </div>
-        <div>
+        <div className="anim-fade-up" style={{ "--d": "0.06s" } as React.CSSProperties}>
           <label className={labelCls} htmlFor="country">Country</label>
           <input id="country" required className={inputCls} value={form.country}
             onChange={(e) => set("country", e.target.value)} />
@@ -265,12 +320,26 @@ export default function SignupPage() {
           </span>
         </label>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
-        <button type="submit" disabled={loading} className={primaryBtn}>
-          {loading ? "Creating account..." : "Sign up"}
-        </button>
+        <div className="grid grid-cols-3 gap-3">
+          <button type="button" onClick={() => { setError(""); setStep(1); }}
+            className="rounded-control border border-line px-4 py-3.5 text-xs font-extrabold tracking-wider uppercase hover:border-accent">
+            Back
+          </button>
+          <button type="submit" disabled={loading} className={`${primaryBtn} col-span-2`}>
+            {loading ? (
+              <span className="inline-flex items-center justify-center gap-2">
+                <span className="anim-spin inline-block h-3.5 w-3.5 rounded-full border-2 border-black/30 border-t-black" aria-hidden />
+                Creating account...
+              </span>
+            ) : (
+              "Create account"
+            )}
+          </button>
+        </div>
       </form>
+      )}
 
       <p className="mt-6 text-center text-xs text-muted">
         Already have an account?{" "}

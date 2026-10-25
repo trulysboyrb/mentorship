@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { checkDevice } from "@/lib/device";
 import TopBar from "@/components/TopBar";
+import { avatarUrl } from "@/lib/avatar";
 import QuizRunner, { type QuizData } from "@/components/QuizRunner";
 
 export default async function QuizPage({ params }: { params: Promise<{ module: string }> }) {
@@ -16,7 +17,7 @@ export default async function QuizPage({ params }: { params: Promise<{ module: s
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, payment_status")
+    .select("full_name, role, payment_status, avatar_path")
     .eq("id", user.id)
     .single();
   if (!profile) redirect("/dashboard");
@@ -48,6 +49,7 @@ export default async function QuizPage({ params }: { params: Promise<{ module: s
     <>
       <TopBar
         fullName={profile.full_name}
+        avatarUrl={avatarUrl(profile.avatar_path)}
         isAdmin={isAdmin}
         showTools
         left={

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,13 +65,11 @@ export default function LoginPage() {
         </div>
         <div>
           <label className={labelCls} htmlFor="password">Password</label>
-          <input
+          <PasswordInput
             id="password"
-            type="password"
             required
             autoComplete="current-password"
             placeholder="enter password"
-            className={inputCls}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
@@ -82,10 +81,17 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        {error && <p className="text-sm text-danger">{error}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
 
         <button type="submit" disabled={loading} className={primaryBtn}>
-          {loading ? "Logging in..." : "Login"}
+          {loading ? (
+            <span className="inline-flex items-center justify-center gap-2">
+              <span className="anim-spin inline-block h-3.5 w-3.5 rounded-full border-2 border-black/30 border-t-black" aria-hidden />
+              Logging in...
+            </span>
+          ) : (
+            "Login"
+          )}
         </button>
       </form>
 

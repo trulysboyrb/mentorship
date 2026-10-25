@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { firstNameOf, greetingFor, initialOf } from "@/lib/greeting";
+import { firstNameOf, greetingFor } from "@/lib/greeting";
+import Avatar from "@/components/Avatar";
 import { useInstall } from "@/components/useInstall";
 import ThemeToggle from "@/components/ThemeToggle";
 
@@ -18,8 +19,10 @@ export default function TopBar({
   isAdmin,
   showTools,
   left,
+  avatarUrl,
 }: {
   fullName: string;
+  avatarUrl?: string | null;
   isAdmin: boolean;
   showTools: boolean;
   left?: React.ReactNode;
@@ -83,9 +86,9 @@ export default function TopBar({
           aria-expanded={open}
           aria-label="Account menu"
           onClick={() => setOpen((o) => !o)}
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-accent bg-surface text-sm font-black text-accent transition hover:bg-accent hover:text-black"
+          className="shrink-0 rounded-full border border-accent transition hover:brightness-125"
         >
-          {initialOf(fullName)}
+          <Avatar url={avatarUrl} name={fullName} size={34} />
         </button>
 
         {open && (

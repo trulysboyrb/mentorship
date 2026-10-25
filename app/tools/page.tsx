@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { checkDevice } from "@/lib/device";
 import TopBar from "@/components/TopBar";
+import { avatarUrl } from "@/lib/avatar";
 import SessionClock from "@/components/SessionClock";
 import RiskCalculator from "@/components/RiskCalculator";
 import EconomicCalendar from "@/components/EconomicCalendar";
@@ -16,7 +17,7 @@ export default async function ToolsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, payment_status")
+    .select("full_name, role, payment_status, avatar_path")
     .eq("id", user.id)
     .single();
   if (!profile) redirect("/dashboard");
@@ -31,6 +32,7 @@ export default async function ToolsPage() {
     <>
       <TopBar
         fullName={profile.full_name}
+        avatarUrl={avatarUrl(profile.avatar_path)}
         isAdmin={isAdmin}
         showTools
         left={

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import CountUp from "@/components/CountUp";
 import AdminNav from "@/components/AdminNav";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import { formatGMD } from "@/lib/pricing";
@@ -14,9 +15,9 @@ const GREEN = "#10a97a";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
-    <div className="rounded-card border border-line bg-surface p-5">
+    <div className="lift rounded-card border border-line bg-surface p-5">
       <p className="text-[10px] font-extrabold tracking-widest text-muted uppercase">{label}</p>
-      <p className="mt-2 text-2xl font-black">{value}</p>
+      <p className="mt-2 text-2xl font-black"><CountUp value={value} /></p>
       {sub && <p className="mt-1 text-xs text-muted">{sub}</p>}
     </div>
   );

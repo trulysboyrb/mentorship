@@ -11,6 +11,11 @@ import AdminDevicesModal from "@/components/AdminDevicesModal";
 import DeleteStudentModal from "@/components/DeleteStudentModal";
 import { formatGMD, priceFor } from "@/lib/pricing";
 import { clearedViaLabel, type ClearedVia } from "@/lib/paymentMethods";
+import OptionsMenu, { type MenuItem } from "@/components/OptionsMenu";
+import CountUp from "@/components/CountUp";
+import Avatar from "@/components/Avatar";
+import { fireConfetti } from "@/lib/confetti";
+import { toCsv } from "@/lib/csv";
 
 type Student = {
   id: string;
@@ -23,12 +28,14 @@ type Student = {
   created_at: string;
   referral_discount: boolean;
   referrer_name: string | null;
+  avatar_url?: string | null;
 };
 
 type Filter = "all" | "pending" | "cleared" | "finished";
+type Sort = "newest" | "oldest" | "name" | "progress";
 
 const actionBtn =
-  "rounded-control border px-3 py-1.5 text-xs font-extrabold tracking-wider uppercase disabled:opacity-50";
+  "rounded-control border px-3 py-2 text-xs font-extrabold tracking-wider uppercase disabled:opacity-50";
 
 export default function AdminStudents({
   students,
@@ -37,7 +44,9 @@ export default function AdminStudents({
   finished,
   certificates,
   notes,
+  initialQuery = "",
 }: {
+  initialQuery?: string;
   students: Student[];
   completed: Record<string, number>;
   totalLessons: number;
@@ -47,6 +56,8 @@ export default function AdminStudents({
 }) {
   const router = useRouter();
   const [filter, setFilter] = useState<Filter>("all");
+  const [query, setQuery] = useState(initialQuery);
+  const [sort, setSort] = useState<Sort>("newest");
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [certFor, setCertFor] = useState<string | null>(null);
@@ -54,11 +65,47 @@ export default function AdminStudents({
   const [devicesFor, setDevicesFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
 
-  const shown = students.filter((s) => {
-    if (filter === "all") return true;
-    if (filter === "finished") return !!finished[s.id];
-    return s.payment_status === filter;
-  });
+  const needle = query.trim().toLowerCase();
+  const shown = students
+    .filter((s) => {
+      if (needle) {
+        const hay = `${s.full_name} ${s.email ?? ""} ${s.whatsapp ?? ""}`.toLowerCase();
+        if (!hay.includes(needle)) return false;
+      }
+      if (filter === "all") return true;
+      if (filter === "finished") return !!finished[s.id];
+      return s.payment_status === filter;
+    })
+    .sort((a, b) => {
+      if (sort === "oldest") return a.created_at.localeCompare(b.created_at);
+      if (sort === "name") return a.full_name.localeCompare(b.full_name);
+      if (sort === "progress") return (completed[b.id] ?? 0) - (completed[a.id] ?? 0);
+      return b.created_at.localeCompare(a.created_at);
+    });
+
+  function exportCsv() {
+    const csv = toCsv(
+      ["Name", "Email", "WhatsApp", "Mode", "Status", "Paid via", "Lessons completed", "Signed up"],
+      shown.map((s) => [
+        s.full_name,
+        s.email,
+        s.whatsapp,
+        s.learning_mode === "in_person" ? "In person" : "Online",
+        s.payment_status,
+        s.cleared_via,
+        s.payment_status === "cleared" ? (completed[s.id] ?? 0) : "",
+        s.created_at.slice(0, 10),
+      ])
+    );
+    const url = URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `students-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   const clearedCount = students.filter((s) => s.payment_status === "cleared").length;
   const finishedCount = students.filter((s) => finished[s.id]).length;
 
@@ -71,6 +118,7 @@ export default function AdminStudents({
       new_status: status,
     });
     if (error) setError(error.message);
+    else if (status === "cleared") fireConfetti(110);
     setBusy(null);
     router.refresh();
   }
@@ -127,6 +175,21 @@ export default function AdminStudents({
     router.refresh();
   }
 
+  function menuFor(s: Student, cleared: boolean, certCount: number, noteCount: number): MenuItem[] {
+    return [
+      cleared
+        ? { key: "unclear", label: "Unclear (lock courses)", onClick: () => setStatus(s, "pending"), tone: "danger" }
+        : { key: "clear", label: "Clear (unlock courses)", onClick: () => setStatus(s, "cleared"), tone: "accent" },
+      { key: "cert", label: "Give certificate", badge: certCount, onClick: () => setCertFor(s.id), dividerBefore: true },
+      { key: "notes", label: "Notes", badge: noteCount, onClick: () => setNotesFor(s.id) },
+      { key: "devices", label: "Devices", onClick: () => setDevicesFor(s.id) },
+      ...(s.whatsapp
+        ? [{ key: "wa", label: "Open WhatsApp chat", onClick: () => window.open(`https://wa.me/${s.whatsapp!.replace(/\D/g, "")}`, "_blank", "noopener,noreferrer") } as MenuItem]
+        : []),
+      { key: "delete", label: "Delete student", onClick: () => setDeleteFor(s.id), tone: "danger", dividerBefore: true },
+    ];
+  }
+
   const tab = (value: Filter, label: string) => (
     <button
       onClick={() => setFilter(value)}
@@ -147,18 +210,47 @@ export default function AdminStudents({
           ["Pending", students.length - clearedCount],
           ["Finished course", finishedCount],
         ].map(([label, n]) => (
-          <div key={label} className="rounded-card border border-line bg-surface p-5">
+          <div key={label} className="lift rounded-card border border-line bg-surface p-5">
             <p className="text-[10px] font-extrabold tracking-widest text-muted uppercase">{label}</p>
-            <p className="mt-2 text-3xl font-black">{n}</p>
+            <p className="mt-2 text-3xl font-black"><CountUp value={n} /></p>
           </div>
         ))}
       </div>
 
-      <div className="mt-8 flex flex-wrap gap-3">
+      <div className="mt-8 flex flex-wrap items-center gap-3">
         {tab("all", "All")}
         {tab("pending", "Pending")}
         {tab("cleared", "Cleared")}
         {tab("finished", "Finished")}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search name, email or WhatsApp"
+          aria-label="Search students"
+          className="min-w-0 flex-1 rounded-control border border-line bg-black px-4 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-accent focus:outline-none sm:max-w-xs"
+        />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as Sort)}
+          aria-label="Sort students"
+          className="rounded-control border border-line bg-black px-3 py-2.5 text-sm text-white focus:border-accent focus:outline-none"
+        >
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="name">Name A to Z</option>
+          <option value="progress">Most lessons done</option>
+        </select>
+        <button type="button" onClick={exportCsv} disabled={shown.length === 0}
+          className="rounded-control border border-line px-4 py-2.5 text-xs font-extrabold tracking-wider uppercase hover:border-accent disabled:opacity-50">
+          Export CSV
+        </button>
+        <span className="text-xs text-muted">
+          Showing {shown.length} of {students.length}
+        </span>
       </div>
 
       {error && <p className="mt-4 break-words text-sm text-danger">{error}</p>}
@@ -177,14 +269,19 @@ export default function AdminStudents({
             </tr>
           </thead>
           <tbody>
-            {shown.map((s) => {
+            {shown.map((s, idx) => {
               const cleared = s.payment_status === "cleared";
               const certCount = certificates[s.id]?.length ?? 0;
               const noteCount = notes[s.id]?.length ?? 0;
               const canApprove = cleared && finished[s.id] && certCount === 0;
               return (
-                <tr key={s.id} className="border-b border-line last:border-0">
-                  <td className="px-4 py-3">{s.full_name}</td>
+                <tr key={s.id} className="anim-row border-b border-line transition-colors last:border-0 hover:bg-surface-2/60" style={{ "--d": `${Math.min(idx, 12) * 0.03}s` } as React.CSSProperties}>
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-3">
+                      <Avatar url={s.avatar_url} name={s.full_name} size={32} className="border border-line" />
+                      <span>{s.full_name}</span>
+                    </span>
+                  </td>
                   <td className="px-4 py-3 text-muted">{s.email}</td>
                   <td className="px-4 py-3 text-muted">
                     {s.whatsapp && (
@@ -222,7 +319,7 @@ export default function AdminStudents({
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex flex-wrap justify-end gap-2">
+                    <div className="flex items-center justify-end gap-2">
                       {canApprove && (
                         <button
                           disabled={busy === s.id}
@@ -232,43 +329,7 @@ export default function AdminStudents({
                           Approve certificate
                         </button>
                       )}
-                      <button
-                        onClick={() => setCertFor(s.id)}
-                        className={`${actionBtn} border-line text-white hover:border-accent`}
-                      >
-                        Give Certificate
-                        {certCount > 0 && <span className="ml-2 text-accent">({certCount})</span>}
-                      </button>
-                      <button
-                        onClick={() => setDevicesFor(s.id)}
-                        className={`${actionBtn} border-line text-white hover:border-accent`}
-                      >
-                        Devices
-                      </button>
-                      <button
-                        onClick={() => setNotesFor(s.id)}
-                        className={`${actionBtn} border-line text-white hover:border-accent`}
-                      >
-                        Notes
-                        {noteCount > 0 && <span className="ml-2 text-accent">({noteCount})</span>}
-                      </button>
-                      <button
-                        disabled={busy === s.id}
-                        onClick={() => setStatus(s, cleared ? "pending" : "cleared")}
-                        className={`${actionBtn} ${
-                          cleared
-                            ? "border-line text-muted hover:border-danger hover:text-danger"
-                            : "border-accent bg-accent text-black"
-                        }`}
-                      >
-                        {cleared ? "Unclear" : "Clear"}
-                      </button>
-                      <button
-                        onClick={() => setDeleteFor(s.id)}
-                        className={`${actionBtn} border-line text-muted hover:border-danger hover:text-danger`}
-                      >
-                        Delete
-                      </button>
+                      <OptionsMenu busy={busy === s.id} items={menuFor(s, cleared, certCount, noteCount)} />
                     </div>
                   </td>
                 </tr>
@@ -277,7 +338,7 @@ export default function AdminStudents({
             {shown.length === 0 && (
               <tr>
                 <td colSpan={7} className="px-4 py-8 text-center text-muted">
-                  No students here yet.
+                  {needle || filter !== "all" ? "No students match." : "No students here yet."}
                 </td>
               </tr>
             )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
+import Extras from "@/components/Extras";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 const inter = Inter({
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body>
         <div className="glow-bg" />
         <PwaRegister />
+        <Extras />
         {children}
       </body>
     </html>

@@ -132,6 +132,17 @@ export default function TopBar({
                 </Link>
               )
             )}
+            <button
+              role="menuitem"
+              onClick={() => {
+                close();
+                window.dispatchEvent(new Event("apex:palette"));
+              }}
+              className={`${itemCls} flex items-center justify-between`}
+            >
+              Quick search
+              <kbd className="border border-line px-1.5 text-[10px] text-muted">Ctrl K</kbd>
+            </button>
             <ThemeToggle variant="menu" />
             <button role="menuitem" onClick={signOut} className={`${itemCls} border-t border-line`}>
               Log out

@@ -146,11 +146,42 @@ body {
 .lift { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
 .lift:hover { transform: translateY(-4px); border-color: var(--color-accent); box-shadow: 0 12px 40px -18px color-mix(in srgb, var(--color-accent) 55%, transparent); }
 
+/* ---- Phase 14.1: admin motion, menus, gold mode ---- */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.menu-pop { transform-origin: top right; animation: pop-in 0.16s ease-out; }
+.fade-quick { animation: fade-in 0.15s ease-out; }
+.anim-row { animation: row-in 0.4s ease both; animation-delay: var(--d, 0s); }
+.anim-page { animation: page-in 0.35s ease-out both; }
+/* Every admin popup (the modals) fades in. */
+.fixed.inset-0.z-50.bg-black\/80 { animation: fade-in 0.18s ease-out; }
+.nav-link:hover span:last-child { transform: scaleX(1); }
+
+/* Easter egg: gold mode (Konami code). */
+[data-gold="1"] { --color-accent: #f5c542; }
+[data-gold="1"][data-theme="light"] { --color-accent: #a87400; }
+[data-gold="1"] .glow-bg {
+  background:
+    radial-gradient(600px circle at 12% 15%, rgba(245, 197, 66, 0.09), transparent 60%),
+    radial-gradient(700px circle at 95% 85%, rgba(245, 197, 66, 0.07), transparent 60%);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
     transition: none !important;
   }
+  .anim-row, .anim-page, .menu-pop { opacity: 1 !important; transform: none !important; }
   .reveal, .anim-fade-up, .anim-fade-in, .candle { opacity: 1 !important; transform: none !important; }
   .chart-line { stroke-dashoffset: 0 !important; }
 }

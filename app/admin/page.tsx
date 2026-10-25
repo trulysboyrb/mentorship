@@ -3,8 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import AdminNav from "@/components/AdminNav";
 import AdminStudents from "@/components/AdminStudents";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
+import { avatarUrl } from "@/lib/avatar";
 
-export default async function AdminPage() {
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -28,7 +34,7 @@ export default async function AdminPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by, cleared_via")
+      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by, cleared_via, avatar_path")
       .eq("role", "student")
       .order("created_at", { ascending: false }),
     supabase.rpc("admin_student_stats"),
@@ -86,6 +92,7 @@ export default async function AdminPage() {
     payment_status: s.payment_status,
     cleared_via: s.cleared_via ?? null,
     created_at: s.created_at,
+    avatar_url: avatarUrl(s.avatar_path),
     referral_discount: !!s.referral_discount,
     // Referrers are always students or admin; admins are not in this list, so fall back to null.
     referrer_name: s.referred_by ? (nameById[s.referred_by] ?? null) : null,
@@ -109,6 +116,7 @@ export default async function AdminPage() {
         </div>
       )}
       <AdminStudents
+        initialQuery={(q ?? "").slice(0, 80)}
         students={rows}
         completed={completed}
         totalLessons={totalLessons ?? 0}

@@ -7,4 +7,4 @@ export function isTheme(v: unknown): v is Theme {
 }
 
 // Runs in the page <head> before anything is painted, so there is no flash of the wrong theme.
-export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t)}else{document.documentElement.setAttribute("data-theme","dark")}}catch(e){document.documentElement.setAttribute("data-theme","dark")}})();`;
+export const THEME_INIT_SCRIPT = `(function(){try{var t=localStorage.getItem("${THEME_KEY}");if(t==="light"||t==="dark"){document.documentElement.setAttribute("data-theme",t)}else{document.documentElement.setAttribute("data-theme","dark")}}catch(e){document.documentElement.setAttribute("data-theme","dark")}try{if(localStorage.getItem("apex_gold")==="1")document.documentElement.setAttribute("data-gold","1")}catch(e){}})();`;

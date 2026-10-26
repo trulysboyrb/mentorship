@@ -8,7 +8,8 @@ import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
 import PasswordInput from "@/components/PasswordInput";
 import { passwordStrength, validEmail } from "@/lib/passwordStrength";
-import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
+import { formatGMD, priceFor } from "@/lib/pricing";
+import { DEFAULT_STATUS, parseSiteStatus, pricingOf, type SiteStatus } from "@/lib/siteSettings";
 import { normalizeReferralCode } from "@/lib/referral";
 
 type CodeState = "idle" | "checking" | "valid" | "invalid";
@@ -27,6 +28,8 @@ export default function SignupPage() {
     referral: "",
   });
   const [step, setStep] = useState<1 | 2>(1);
+  const [site, setSite] = useState<SiteStatus>(DEFAULT_STATUS);
+  const [siteChecked, setSiteChecked] = useState(false);
   const [codeState, setCodeState] = useState<CodeState>("idle");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -49,6 +52,21 @@ export default function SignupPage() {
     setCodeState(next);
     return next;
   }
+
+  // The admin can close signups and change prices, so ask the database what is true right now.
+  useEffect(() => {
+    let alive = true;
+    createClient()
+      .rpc("site_status")
+      .then(({ data }) => {
+        if (!alive) return;
+        setSite(parseSiteStatus(data));
+        setSiteChecked(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   // A friend's share link looks like /signup?ref=K7M2QX
   useEffect(() => {
@@ -115,6 +133,13 @@ export default function SignupPage() {
     });
 
     if (error) {
+      // When signups are closed the database refuses the new account.
+      const { data: fresh } = await createClient().rpc("site_status");
+      if (!parseSiteStatus(fresh).signups_open) {
+        setSite(parseSiteStatus(fresh));
+        setLoading(false);
+        return;
+      }
       setError(error.message);
       setLoading(false);
       return;
@@ -136,6 +161,22 @@ export default function SignupPage() {
       setCheckEmail(true);
       setLoading(false);
     }
+  }
+
+  if (siteChecked && !site.signups_open) {
+    return (
+      <AuthCard title="Signups are closed" subtitle="We are not taking new students right now">
+        <p className="text-center text-sm text-muted">
+          Registration is closed for the moment. Please check back soon. If you already have an account you can still log in.
+        </p>
+        <Link href="/login" className={`${primaryBtn} mt-6 block text-center`}>
+          Login
+        </Link>
+        <Link href="/" className="mt-4 block text-center text-xs text-accent hover:underline">
+          Back to home
+        </Link>
+      </AuthCard>
+    );
   }
 
   if (checkEmail) {
@@ -227,7 +268,7 @@ export default function SignupPage() {
           <div className="grid grid-cols-2 gap-3">
             {(["online", "in_person"] as const).map((value) => {
               const label = value === "online" ? "Online" : "In person";
-              const { base, final } = priceFor(value, referred);
+              const { base, final } = priceFor(value, referred, pricingOf(site));
               return (
                 <label key={value}
                   className={`cursor-pointer rounded-control border px-4 py-3 text-center ${
@@ -280,7 +321,7 @@ export default function SignupPage() {
         <div>
           <label className={labelCls} htmlFor="referral">Referral code (optional)</label>
           <input id="referral" maxLength={14} autoComplete="off" className={inputCls}
-            placeholder={`from a friend, for ${REFERRAL_DISCOUNT_PERCENT}% off`} value={form.referral}
+            placeholder={`from a friend, for ${site.referral_percent}% off`} value={form.referral}
             onChange={(e) => {
               set("referral", e.target.value.toUpperCase());
               setCodeState("idle");
@@ -290,7 +331,7 @@ export default function SignupPage() {
             {codeState === "checking" && <span className="text-muted">Checking code...</span>}
             {codeState === "valid" && (
               <span className="text-accent">
-                Code accepted. You get {REFERRAL_DISCOUNT_PERCENT}% off.
+                Code accepted. You get {site.referral_percent}% off.
               </span>
             )}
             {codeState === "invalid" && (

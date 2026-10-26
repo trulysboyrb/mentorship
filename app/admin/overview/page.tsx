@@ -9,6 +9,8 @@ import { BRAND } from "@/lib/config";
 import { METHODS, clearedViaLabel, isPayMethod, type ClearedVia } from "@/lib/paymentMethods";
 import { type OverviewData, revenueSplit, timeAgo, waLink } from "@/lib/overviewView";
 import { pct } from "@/lib/analyticsView";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 
 const BLUE = "#5a8ee6";
 const GREEN = "#10a97a";
@@ -101,7 +103,9 @@ export default async function OverviewPage() {
       cleared_via: r.cleared_via,
       cleared_at: r.cleared_at,
     })),
-    o.online
+    o.online,
+    Date.now(),
+    pricingOf(await getSiteStatus())
   );
   const attention = o.attention;
   const needs =

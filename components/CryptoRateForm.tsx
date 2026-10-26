@@ -3,11 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { PRICES } from "@/lib/pricing";
 import { gmdToUsd, formatUsd } from "@/lib/paymentMath";
 import { inputCls, labelCls } from "@/components/ui";
 
-export default function CryptoRateForm({ current }: { current: number | null }) {
+export default function CryptoRateForm({
+  current,
+  priceOnline,
+  priceInPerson,
+}: {
+  current: number | null;
+  priceOnline: number;
+  priceInPerson: number;
+}) {
   const router = useRouter();
   const [value, setValue] = useState(current === null ? "" : String(current));
   const [busy, setBusy] = useState(false);
@@ -46,7 +53,7 @@ export default function CryptoRateForm({ current }: { current: number | null }) 
       </div>
       {valid && (
         <p className="mt-3 text-xs text-muted">
-          At this rate: Online {formatUsd(gmdToUsd(PRICES.online, n) ?? 0)}, In person {formatUsd(gmdToUsd(PRICES.in_person, n) ?? 0)} (before any referral discount).
+          At this rate: Online {formatUsd(gmdToUsd(priceOnline, n) ?? 0)}, In person {formatUsd(gmdToUsd(priceInPerson, n) ?? 0)} (before any referral discount).
         </p>
       )}
       {msg && <p className={`mt-3 text-sm ${msg.ok ? "text-accent" : "text-danger"}`}>{msg.text}</p>}

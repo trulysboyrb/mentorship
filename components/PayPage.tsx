@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { priceFor, formatGMD, REFERRAL_DISCOUNT_PERCENT } from "@/lib/pricing";
+import { priceFor, formatGMD } from "@/lib/pricing";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 import { gmdToUsd, formatUsd } from "@/lib/paymentMath";
 import { whatsappLink } from "@/lib/whatsapp";
 import { METHODS, type PayMethod } from "@/lib/paymentMethods";
@@ -31,12 +33,16 @@ export default async function PayPage({
     .single();
   if (profile?.payment_status === "cleared") redirect("/dashboard");
 
+  const site = await getSiteStatus();
+  const pricing = pricingOf(site);
   const referred = !!profile?.referral_discount;
-  const price = priceFor(profile?.learning_mode, referred);
-  const avail = (await getAvailability(supabase))[method];
+  const price = priceFor(profile?.learning_mode, referred, pricing);
+  const avail = (await getAvailability(supabase, site))[method];
   const { data: rate } = await supabase.rpc("get_gmd_per_usd");
   const usd = method === "crypto" ? gmdToUsd(price.final, Number(rate ?? 0)) : null;
-  const wa = whatsappLink(profile?.full_name ?? "", user.email ?? "", profile?.learning_mode ?? null, { referred });
+  const wa = site.pay_whatsapp
+    ? whatsappLink(profile?.full_name ?? "", user.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    : null;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-4 py-10">
@@ -53,7 +59,7 @@ export default async function PayPage({
           {usd !== null && <p className="mt-1 text-xs text-muted">About {formatUsd(usd)} in crypto</p>}
           {referred && (
             <p className="mt-1 text-xs text-accent">
-              {REFERRAL_DISCOUNT_PERCENT}% referral discount applied (you save {formatGMD(price.saved)})
+              {pricing.referralPercent}% referral discount applied (you save {formatGMD(price.saved)})
             </p>
           )}
         </div>
@@ -83,7 +89,7 @@ export default async function PayPage({
             <PayPanel method={method} bg={info.bg} fg={info.fg} />
           ) : (
             <p className="border border-line p-3 text-xs text-muted">
-              {info.label} payments are not available right now. Please pay via WhatsApp instead.
+              {info.label} payments are not available right now.{wa ? " Please pay via WhatsApp instead." : " Please check back soon."}
             </p>
           )}
         </div>
@@ -96,9 +102,11 @@ export default async function PayPage({
           <Link href="/dashboard" className="text-muted hover:text-white">
             Back
           </Link>
-          <a href={wa} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white">
-            Prefer WhatsApp?
-          </a>
+          {wa && (
+            <a href={wa} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-white">
+              Prefer WhatsApp?
+            </a>
+          )}
         </div>
       </div>
       <LegalLinks className="mt-6" />

@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server";
 import AdminNav from "@/components/AdminNav";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import { formatGMD } from "@/lib/pricing";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 import {
   type Analytics,
   estimateRevenue,
@@ -77,7 +79,8 @@ export default async function AnalyticsPage() {
     (paidRows ?? []).map((r) => ({
       learning_mode: r.learning_mode,
       referral_discount: !!r.referral_discount,
-    }))
+    })),
+    pricingOf(await getSiteStatus())
   );
 
   // Weekly chart geometry

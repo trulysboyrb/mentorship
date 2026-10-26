@@ -1,4 +1,4 @@
-import { priceFor } from "./pricing";
+import { priceFor, type Pricing } from "./pricing";
 
 export type OverviewData = {
   totals: {
@@ -40,14 +40,19 @@ const DAY = 24 * 60 * 60 * 1000;
 
 // Students cleared by an admin (or WhatsApp) have no payment record, so their money is
 // ESTIMATED from the current prices. Online payments (Wave, Card, Crypto) are real amounts.
-export function revenueSplit(rows: ClearedRow[], online: { total: number; d7: number; d30: number }, now = Date.now()) {
+export function revenueSplit(
+  rows: ClearedRow[],
+  online: { total: number; d7: number; d30: number },
+  now = Date.now(),
+  pricing?: Pricing
+) {
   let manualTotal = 0;
   let manual7 = 0;
   let manual30 = 0;
   let manualCount = 0;
   for (const r of rows) {
     if (r.cleared_via && !["manual", "whatsapp"].includes(r.cleared_via)) continue;
-    const { final } = priceFor(r.learning_mode, r.referral_discount);
+    const { final } = priceFor(r.learning_mode, r.referral_discount, pricing);
     manualTotal += final;
     manualCount += 1;
     const t = r.cleared_at ? new Date(r.cleared_at).getTime() : NaN;

@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { whatsappLink } from "@/lib/whatsapp";
-import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
+import { formatGMD, priceFor } from "@/lib/pricing";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 import AuthCard from "@/components/AuthCard";
 import PayButtons from "@/components/PayButtons";
 import { getAvailability } from "@/lib/payments/available";
@@ -18,15 +20,14 @@ export default async function PendingPage() {
     .eq("id", user!.id)
     .single();
 
-  const payAvail = await getAvailability(supabase);
+  const site = await getSiteStatus();
+  const pricing = pricingOf(site);
+  const payAvail = await getAvailability(supabase, site);
   const referred = !!profile?.referral_discount;
-  const price = priceFor(profile?.learning_mode, referred);
-  const href = whatsappLink(
-    profile?.full_name ?? "",
-    user!.email ?? "",
-    profile?.learning_mode ?? null,
-    { referred }
-  );
+  const price = priceFor(profile?.learning_mode, referred, pricing);
+  const href = site.pay_whatsapp
+    ? whatsappLink(profile?.full_name ?? "", user!.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    : null;
 
   return (
     <AuthCard title="Account created" subtitle="Complete your payment to unlock courses">
@@ -40,7 +41,7 @@ export default async function PendingPage() {
         <p className="mt-1 text-2xl font-black">{formatGMD(price.final)}</p>
         {referred && (
           <p className="mt-1 text-xs text-accent">
-            {REFERRAL_DISCOUNT_PERCENT}% referral discount applied (you save {formatGMD(price.saved)})
+            {pricing.referralPercent}% referral discount applied (you save {formatGMD(price.saved)})
           </p>
         )}
       </div>

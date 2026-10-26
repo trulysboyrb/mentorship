@@ -4,6 +4,8 @@ import AdminNav from "@/components/AdminNav";
 import AdminStudents from "@/components/AdminStudents";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import { avatarUrl } from "@/lib/avatar";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 
 export default async function AdminPage({
   searchParams,
@@ -117,6 +119,7 @@ export default async function AdminPage({
       )}
       <AdminStudents
         initialQuery={(q ?? "").slice(0, 80)}
+        pricing={pricingOf(await getSiteStatus())}
         students={rows}
         completed={completed}
         totalLessons={totalLessons ?? 0}

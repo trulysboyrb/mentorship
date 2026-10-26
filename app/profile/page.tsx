@@ -14,6 +14,7 @@ import ReferralPanel from "@/components/ReferralPanel";
 import NotesPanel, { type NoteItem } from "@/components/NotesPanel";
 import type { Earnings, PayoutRow } from "@/lib/earnings";
 import InstallApp from "@/components/InstallApp";
+import { getSiteStatus } from "@/lib/siteStatus";
 import { CONTACT_EMAIL } from "@/lib/legal";
 
 export default async function ProfilePage() {
@@ -122,6 +123,7 @@ export default async function ProfilePage() {
   );
 
   const refStats = Array.isArray(stats) ? stats[0] : stats;
+  const site = await getSiteStatus();
 
   return (
     <>
@@ -194,6 +196,7 @@ export default async function ProfilePage() {
 
         <ReferralPanel
           code={profile.referral_code}
+          percent={site.referral_percent}
           active={cleared || isAdmin}
           total={refStats?.total ?? 0}
           paid={refStats?.paid ?? 0}

@@ -6,7 +6,7 @@ export default function PayButtons({
   waHref,
   enabled,
 }: {
-  waHref: string;
+  waHref: string | null; // null = the WhatsApp option is switched off
   enabled: Record<PayMethod, boolean>;
 }) {
   const online = METHOD_ORDER.filter((m) => enabled[m]);
@@ -28,16 +28,23 @@ export default function PayButtons({
           ))}
         </div>
       )}
-      <a
-        href={waHref}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={base}
-        style={{ background: WHATSAPP_COLORS.bg, color: WHATSAPP_COLORS.fg }}
-      >
-        Pay via WhatsApp
-      </a>
-      {online.length > 0 && (
+      {waHref && (
+        <a
+          href={waHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={base}
+          style={{ background: WHATSAPP_COLORS.bg, color: WHATSAPP_COLORS.fg }}
+        >
+          Pay via WhatsApp
+        </a>
+      )}
+      {online.length === 0 && !waHref && (
+        <p className="border border-line p-4 text-center text-sm text-muted">
+          Payments are paused for a moment. Please check back soon.
+        </p>
+      )}
+      {online.length > 0 && waHref && (
         <p className="text-center text-[11px] text-muted">
           Wave, Card and Crypto unlock your courses automatically. WhatsApp is confirmed by our team.
         </p>

@@ -6,7 +6,8 @@ import RotatingWord from "@/components/RotatingWord";
 import HeroChart from "@/components/HeroChart";
 import Ticker from "@/components/Ticker";
 import { FAQ, STEPS, TESTIMONIALS } from "@/lib/landing";
-import { PRICES, REFERRAL_DISCOUNT_PERCENT, formatGMD } from "@/lib/pricing";
+import { formatGMD } from "@/lib/pricing";
+import { getSiteStatus } from "@/lib/siteStatus";
 
 const primary =
   "rounded-(--radius-control) bg-white px-10 py-3.5 text-center text-xs font-extrabold tracking-wider text-black uppercase transition hover:bg-accent hover:-translate-y-0.5";
@@ -26,16 +27,17 @@ const FEATURES = [
   { icon: "▢", name: "Works on your phone", text: "Install it like an app and learn anywhere on your phone or laptop." },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const site = await getSiteStatus();
   const plans = [
     {
       name: "Online",
-      price: PRICES.online,
+      price: site.price_online,
       points: ["The full course on your phone or laptop", "Quizzes, certificate and live classes", "Market tools and downloadable notes"],
     },
     {
       name: "In Person",
-      price: PRICES.in_person,
+      price: site.price_in_person,
       points: ["Everything in Online", "Classes with us face to face", "Hands-on help with your questions"],
     },
   ];
@@ -177,7 +179,7 @@ export default function LandingPage() {
             ))}
           </div>
           <p className="mt-5 text-xs text-muted">
-            Have a referral code from a student? You get {REFERRAL_DISCOUNT_PERCENT}% off.
+            Have a referral code from a student? You get {site.referral_percent}% off.
           </p>
         </section>
 

@@ -4,7 +4,9 @@ import { checkDevice } from "@/lib/device";
 import { whatsappLink } from "@/lib/whatsapp";
 import PayButtons from "@/components/PayButtons";
 import { getAvailability } from "@/lib/payments/available";
-import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "@/lib/pricing";
+import { formatGMD, priceFor } from "@/lib/pricing";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { pricingOf } from "@/lib/siteSettings";
 import DashboardShell from "@/components/DashboardShell";
 import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
@@ -170,15 +172,14 @@ export default async function DashboardPage({
     videoSrc = signed?.signedUrl ?? null;
   }
 
-  const payAvail = await getAvailability(supabase);
+  const site = await getSiteStatus();
+  const pricing = pricingOf(site);
+  const payAvail = await getAvailability(supabase, site);
   const referred = !!profile?.referral_discount;
-  const price = priceFor(profile?.learning_mode, referred);
-  const waHref = whatsappLink(
-    profile?.full_name ?? "",
-    profile?.email ?? "",
-    profile?.learning_mode ?? null,
-    { referred }
-  );
+  const price = priceFor(profile?.learning_mode, referred, pricing);
+  const waHref = site.pay_whatsapp
+    ? whatsappLink(profile?.full_name ?? "", profile?.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    : null;
 
   const title = !cleared
     ? "Your courses are locked"
@@ -339,7 +340,7 @@ export default async function DashboardPage({
               <span className="font-bold">{formatGMD(price.final)}</span>
               {referred && (
                 <span className="mt-1 block text-xs text-accent">
-                  {REFERRAL_DISCOUNT_PERCENT}% referral discount applied
+                  {pricing.referralPercent}% referral discount applied
                 </span>
               )}
             </p>

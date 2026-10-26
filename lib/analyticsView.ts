@@ -1,4 +1,4 @@
-import { priceFor } from "./pricing";
+import { priceFor, type Pricing } from "./pricing";
 
 export type Totals = {
   students: number;
@@ -75,12 +75,13 @@ export function lessonRows(lessons: LessonStat[], clearedStudents: number) {
 }
 
 export function estimateRevenue(
-  paidStudents: { learning_mode: string | null; referral_discount: boolean }[]
+  paidStudents: { learning_mode: string | null; referral_discount: boolean }[],
+  pricing?: Pricing
 ) {
   let online = 0;
   let inPerson = 0;
   for (const s of paidStudents) {
-    const { final } = priceFor(s.learning_mode, s.referral_discount);
+    const { final } = priceFor(s.learning_mode, s.referral_discount, pricing);
     if (s.learning_mode === "in_person") inPerson += final;
     else online += final;
   }

@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
 import Extras from "@/components/Extras";
+import MaintenanceGate from "@/components/MaintenanceGate";
+import { getSiteStatus } from "@/lib/siteStatus";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
 
 const inter = Inter({
@@ -17,11 +19,12 @@ export const metadata: Metadata = {
     "Learn modern trading and blockchain skills, structured into clear modules.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const site = await getSiteStatus();
   return (
     <html lang="en" className={inter.variable} data-theme="dark" suppressHydrationWarning>
       <head>
@@ -31,7 +34,8 @@ export default function RootLayout({
         <div className="glow-bg" />
         <PwaRegister />
         <Extras />
-        {children}
+        <div id="app-content">{children}</div>
+        <MaintenanceGate initialMaintenance={site.maintenance} initialIsAdmin={site.is_admin} />
       </body>
     </html>
   );

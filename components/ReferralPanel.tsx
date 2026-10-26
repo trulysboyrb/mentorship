@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { canRequestPayout, payoutHint, payoutStatusLabel, type Earnings, type PayoutRow } from "@/lib/earnings";
-import { REFERRAL_DISCOUNT_PERCENT } from "@/lib/pricing";
 import { referralLink, referralShareText } from "@/lib/referral";
 
 export default function ReferralPanel({
   code,
+  percent,
   active,
   total,
   paid,
@@ -17,6 +17,7 @@ export default function ReferralPanel({
   payouts,
 }: {
   code: string;
+  percent: number;
   active: boolean;
   total: number;
   paid: number;
@@ -57,7 +58,7 @@ export default function ReferralPanel({
 
   const link = origin ? referralLink(origin, code) : "";
   const wa = origin
-    ? `https://wa.me/?text=${encodeURIComponent(referralShareText(origin, code))}`
+    ? `https://wa.me/?text=${encodeURIComponent(referralShareText(origin, code, percent))}`
     : "#";
 
   const btn =
@@ -68,7 +69,7 @@ export default function ReferralPanel({
       <h2 className="text-xs font-extrabold tracking-widest uppercase">Refer a friend</h2>
       <div className="mt-4 rounded-card border border-line bg-surface p-5">
         <p className="text-sm text-muted">
-          Friends who join with your code get {REFERRAL_DISCOUNT_PERCENT}% off their course.
+          Friends who join with your code get {percent}% off their course.
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -103,7 +104,7 @@ export default function ReferralPanel({
         </p>
         {usedCode && (
           <p className="mt-2 text-xs text-accent">
-            You joined with a referral code, so your {REFERRAL_DISCOUNT_PERCENT}% discount applies.
+            You joined with a referral code, so your {percent}% discount applies.
           </p>
         )}
 

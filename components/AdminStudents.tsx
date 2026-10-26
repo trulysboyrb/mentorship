@@ -9,7 +9,7 @@ import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
 import AdminDevicesModal from "@/components/AdminDevicesModal";
 import DeleteStudentModal from "@/components/DeleteStudentModal";
-import { formatGMD, priceFor } from "@/lib/pricing";
+import { formatGMD, priceFor, DEFAULT_PRICING, type Pricing } from "@/lib/pricing";
 import { clearedViaLabel, type ClearedVia } from "@/lib/paymentMethods";
 import OptionsMenu, { type MenuItem } from "@/components/OptionsMenu";
 import CountUp from "@/components/CountUp";
@@ -45,8 +45,10 @@ export default function AdminStudents({
   certificates,
   notes,
   initialQuery = "",
+  pricing = DEFAULT_PRICING,
 }: {
   initialQuery?: string;
+  pricing?: Pricing;
   students: Student[];
   completed: Record<string, number>;
   totalLessons: number;
@@ -294,11 +296,11 @@ export default function AdminStudents({
                   <td className="px-4 py-3 text-muted">
                     {s.learning_mode === "in_person" ? "In person" : "Online"}
                     <span className="block text-xs">
-                      {formatGMD(priceFor(s.learning_mode, s.referral_discount).final)}
+                      {formatGMD(priceFor(s.learning_mode, s.referral_discount, pricing).final)}
                     </span>
                     {s.referral_discount && (
                       <span className="block text-[10px] font-extrabold tracking-widest text-accent uppercase">
-                        5% referral{s.referrer_name ? ` · ${s.referrer_name}` : ""}
+                        {pricing.referralPercent}% referral{s.referrer_name ? ` · ${s.referrer_name}` : ""}
                       </span>
                     )}
                   </td>

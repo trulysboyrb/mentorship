@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { priceFor } from "@/lib/pricing";
+import { parseSiteStatus, pricingOf } from "@/lib/siteSettings";
 import { availability } from "@/lib/paymentConfig";
 import { siteUrl } from "@/lib/paymentConfig";
 import { gmdToUsd } from "@/lib/paymentMath";
@@ -42,14 +43,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Online payments are not set up yet." }, { status: 503 });
   }
 
+  // The admin's live settings: prices, referral %, switches, maintenance.
+  const { data: statusRaw } = await db.rpc("site_status");
+  const site = parseSiteStatus(statusRaw);
+  if (site.maintenance) {
+    return NextResponse.json({ error: "We are on maintenance right now. Please come back soon." }, { status: 503 });
+  }
+
   const { data: rate } = await db.rpc("get_gmd_per_usd");
   const gmdPerUsd = rate === null || rate === undefined ? null : Number(rate);
-  const avail = availability(process.env, gmdPerUsd)[method];
+  const avail = availability(process.env, gmdPerUsd, { wave: site.pay_wave, card: site.pay_card, crypto: site.pay_crypto })[method];
   if (!avail.ok || !avail.provider) {
     return NextResponse.json({ error: "This payment method is not available right now. Please use WhatsApp." }, { status: 503 });
   }
 
-  const price = priceFor(profile.learning_mode, !!profile.referral_discount).final;
+  const price = priceFor(profile.learning_mode, !!profile.referral_discount, pricingOf(site)).final;
   const amountUsd = method === "crypto" ? gmdToUsd(price, gmdPerUsd ?? 0) : null;
   if (method === "crypto" && amountUsd === null) {
     return NextResponse.json({ error: "The crypto price is not set up yet." }, { status: 503 });

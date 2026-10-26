@@ -4,6 +4,9 @@ import AdminNav from "@/components/AdminNav";
 import MaxDevicesForm from "@/components/MaxDevicesForm";
 import PayoutSettingsForm from "@/components/PayoutSettingsForm";
 import CryptoRateForm from "@/components/CryptoRateForm";
+import SiteSettingsForm from "@/components/SiteSettingsForm";
+import { getSiteStatus } from "@/lib/siteStatus";
+import { getAvailability } from "@/lib/payments/available";
 
 export default async function AdminSettingsPage() {
   const supabase = await createClient();
@@ -20,13 +23,21 @@ export default async function AdminSettingsPage() {
     supabase.rpc("get_gmd_per_usd"),
   ]);
   const current = typeof max === "number" ? max : 2;
+  const site = await getSiteStatus();
+  // Whether each method's secret keys are set up on the server (ignores the on/off switches).
+  const keyState = await getAvailability(supabase);
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
       <AdminNav current="/admin/settings" />
       <h2 className="mt-10 text-3xl font-black tracking-tight">Settings</h2>
 
-      <h3 className="mt-8 text-xs font-extrabold tracking-widest uppercase">Devices per student</h3>
+      <SiteSettingsForm
+        status={site}
+        keys={{ wave: keyState.wave, card: keyState.card, crypto: keyState.crypto }}
+      />
+
+      <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Devices per student</h3>
       <MaxDevicesForm current={current} />
       <p className="mt-3 text-xs leading-relaxed text-muted">
         This limit is enforced by the app when a student opens their dashboard. It stops normal
@@ -40,7 +51,11 @@ export default async function AdminSettingsPage() {
       />
 
       <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Crypto price</h3>
-      <CryptoRateForm current={rate === null || rate === undefined ? null : Number(rate)} />
+      <CryptoRateForm
+        current={rate === null || rate === undefined ? null : Number(rate)}
+        priceOnline={site.price_online}
+        priceInPerson={site.price_in_person}
+      />
     </main>
   );
 }

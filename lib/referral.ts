@@ -10,6 +10,6 @@ export function referralLink(origin: string, code: string): string {
   return `${origin}/signup?ref=${encodeURIComponent(code)}`;
 }
 
-export function referralShareText(origin: string, code: string): string {
-  return `Join ${BRAND} and get ${REFERRAL_DISCOUNT_PERCENT}% off with my referral code ${code}: ${referralLink(origin, code)}`;
+export function referralShareText(origin: string, code: string, percent: number = REFERRAL_DISCOUNT_PERCENT): string {
+  return `Join ${BRAND} and get ${percent}% off with my referral code ${code}: ${referralLink(origin, code)}`;
 }

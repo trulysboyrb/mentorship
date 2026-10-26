@@ -10,7 +10,22 @@ export function mockEnabled(env: Env): boolean {
 }
 
 // Which payment buttons can actually work right now, based on the secret keys that are set.
-export function availability(env: Env, gmdPerUsd: number | null): Record<PayMethod, Availability> {
+export function availability(
+  env: Env,
+  gmdPerUsd: number | null,
+  switches: Record<PayMethod, boolean> = { wave: true, card: true, crypto: true }
+): Record<PayMethod, Availability> {
+  const base = availabilityByKeys(env, gmdPerUsd);
+  // The admin can switch a method off in Settings, whatever the keys say.
+  const off: Availability = { ok: false, reason: "Switched off by the admin in Settings" };
+  return {
+    wave: switches.wave ? base.wave : off,
+    card: switches.card ? base.card : off,
+    crypto: switches.crypto ? base.crypto : off,
+  };
+}
+
+function availabilityByKeys(env: Env, gmdPerUsd: number | null): Record<PayMethod, Availability> {
   const has = (k: string) => !!env[k] && env[k]!.trim() !== "";
   const base = has("SUPABASE_SERVICE_ROLE_KEY");
 

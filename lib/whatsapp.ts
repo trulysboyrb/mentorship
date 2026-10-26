@@ -1,16 +1,17 @@
 import { BRAND, WHATSAPP_NUMBER } from "./config";
-import { REFERRAL_DISCOUNT_PERCENT, formatGMD, priceFor } from "./pricing";
+import { DEFAULT_PRICING, formatGMD, priceFor, type Pricing } from "./pricing";
 
 export function whatsappLink(
   name: string,
   email: string,
   mode: string | null,
-  opts: { referred?: boolean } = {}
+  opts: { referred?: boolean; pricing?: Pricing } = {}
 ) {
   const how = mode === "in_person" ? "in person" : "online";
-  const { final } = priceFor(mode, !!opts.referred);
+  const pricing = opts.pricing ?? DEFAULT_PRICING;
+  const { final } = priceFor(mode, !!opts.referred, pricing);
   const discount = opts.referred
-    ? ` with my ${REFERRAL_DISCOUNT_PERCENT}% referral discount`
+    ? ` with my ${pricing.referralPercent}% referral discount`
     : "";
   const message = `Hi, I just signed up on ${BRAND} as ${name} (${email}). I want to learn ${how} (${formatGMD(final)}${discount}) and I'm ready to pay.`;
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;

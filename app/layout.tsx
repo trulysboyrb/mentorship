@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
 import Extras from "@/components/Extras";
+import SiteBanner from "@/components/SiteBanner";
 import MaintenanceGate from "@/components/MaintenanceGate";
 import { getSiteStatus } from "@/lib/siteStatus";
 import { THEME_INIT_SCRIPT } from "@/lib/theme";
@@ -34,7 +35,10 @@ export default async function RootLayout({
         <div className="glow-bg" />
         <PwaRegister />
         <Extras />
-        <div id="app-content">{children}</div>
+        <div id="app-content">
+          <SiteBanner initialOn={site.banner_on} initialText={site.banner_text} initialTone={site.banner_tone} />
+          {children}
+        </div>
         <MaintenanceGate initialMaintenance={site.maintenance} initialIsAdmin={site.is_admin} />
       </body>
     </html>

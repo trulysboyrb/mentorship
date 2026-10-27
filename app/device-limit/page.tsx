@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { checkDevice, currentDeviceToken } from "@/lib/device";
 import { BRAND } from "@/lib/config";
 import { whatsappHelpLink } from "@/lib/whatsapp";
+import { getSiteStatus } from "@/lib/siteStatus";
 import AuthCard from "@/components/AuthCard";
 import SignOutButton from "@/components/SignOutButton";
 
@@ -30,8 +31,10 @@ export default async function DeviceLimitPage() {
     supabase.rpc("max_devices"),
   ]);
 
+  const site = await getSiteStatus();
   const help = whatsappHelpLink(
-    `Hi, I can't open my courses on a new device on ${BRAND}. My account is ${user.email}. Please reset my devices.`
+    `Hi, I can't open my courses on a new device on ${BRAND}. My account is ${user.email}. Please reset my devices.`,
+    site.contact_whatsapp
   );
 
   return (

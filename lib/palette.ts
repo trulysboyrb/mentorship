@@ -16,6 +16,7 @@ export function baseItems(loggedIn: boolean, isAdmin: boolean): PaletteItem[] {
       { id: "home", label: "Home", group: "Go to", href: "/" },
       { id: "login", label: "Log in", group: "Go to", href: "/login" },
       { id: "signup", label: "Sign up", group: "Go to", href: "/signup" },
+      { id: "contact", label: "Contact Us", group: "Go to", href: "/contact", keywords: "help support whatsapp email" },
       { id: "theme", label: "Switch dark / light mode", group: "Actions", action: "theme", keywords: "theme appearance" },
     ];
   }
@@ -23,6 +24,7 @@ export function baseItems(loggedIn: boolean, isAdmin: boolean): PaletteItem[] {
     { id: "dashboard", label: "My lessons", hint: "Dashboard", group: "Go to", href: "/dashboard", keywords: "dashboard courses videos" },
     { id: "classes", label: "Live classes", hint: "Schedule and reminders", group: "Go to", href: "/classes" },
     { id: "tools", label: "Market tools", hint: "Calendar, sessions, risk calculator", group: "Go to", href: "/tools", keywords: "calendar calculator" },
+    { id: "contact", label: "Contact Us", hint: "Send us a message", group: "Go to", href: "/contact", keywords: "help support whatsapp email" },
     { id: "profile", label: "Profile", hint: "Photo, details, certificates, referrals", group: "Go to", href: "/profile", keywords: "photo picture avatar certificate referral devices" },
   ];
   if (isAdmin) {
@@ -38,7 +40,7 @@ export function baseItems(loggedIn: boolean, isAdmin: boolean): PaletteItem[] {
       ["/admin/payments", "Payments", "wave card crypto"],
       ["/admin/payouts", "Payouts", "referral"],
       ["/admin/analytics", "Analytics", "funnel"],
-      ["/admin/settings", "Settings"],
+      ["/admin/settings", "Settings", "banner contact maintenance prices"],
     ];
     for (const [href, label, kw] of a) {
       items.push({ id: `admin-${href}`, label, hint: "Admin", group: "Admin", href, keywords: kw });

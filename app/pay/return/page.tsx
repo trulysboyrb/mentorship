@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { whatsappHelpLink } from "@/lib/whatsapp";
+import { getSiteStatus } from "@/lib/siteStatus";
 import { METHODS, isPayMethod, WHATSAPP_COLORS } from "@/lib/paymentMethods";
 import AuthCard from "@/components/AuthCard";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
@@ -24,6 +25,7 @@ export default async function PayReturnPage({ searchParams }: { searchParams: Pr
     .single();
   if (profile?.payment_status === "cleared") redirect("/dashboard?paid=1");
 
+  const site = await getSiteStatus();
   const uuid = /^[0-9a-f-]{36}$/i.test(p ?? "") ? p : null;
   const { data: pay } = uuid
     ? await supabase
@@ -95,7 +97,7 @@ export default async function PayReturnPage({ searchParams }: { searchParams: Pr
 
       {pay && (waitedMs > 5 * 60 * 1000 || failed || pay.status === "underpaid") && (
         <a
-          href={whatsappHelpLink(`Hi, I paid on ApexTrade Academy but my account is not cleared yet. Payment reference: ${ref}`)}
+          href={whatsappHelpLink(`Hi, I paid on ApexTrade Academy but my account is not cleared yet. Payment reference: ${ref}`, site.contact_whatsapp)}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-5 block rounded-control px-6 py-3.5 text-center text-xs font-extrabold tracking-wider uppercase"

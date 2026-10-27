@@ -41,7 +41,7 @@ export default async function PayPage({
   const { data: rate } = await supabase.rpc("get_gmd_per_usd");
   const usd = method === "crypto" ? gmdToUsd(price.final, Number(rate ?? 0)) : null;
   const wa = site.pay_whatsapp
-    ? whatsappLink(profile?.full_name ?? "", user.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    ? whatsappLink(profile?.full_name ?? "", user.email ?? "", profile?.learning_mode ?? null, { referred, pricing, number: site.contact_whatsapp })
     : null;
 
   return (

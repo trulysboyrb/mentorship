@@ -26,7 +26,7 @@ export default async function PendingPage() {
   const referred = !!profile?.referral_discount;
   const price = priceFor(profile?.learning_mode, referred, pricing);
   const href = site.pay_whatsapp
-    ? whatsappLink(profile?.full_name ?? "", user!.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    ? whatsappLink(profile?.full_name ?? "", user!.email ?? "", profile?.learning_mode ?? null, { referred, pricing, number: site.contact_whatsapp })
     : null;
 
   return (

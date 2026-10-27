@@ -241,6 +241,26 @@ export default async function LandingPage() {
         </section>
       </main>
 
+      {/* Contact Us */}
+      <section id="contact" className="px-6 pb-16">
+        <Reveal className="mx-auto max-w-3xl rounded-card border border-line bg-surface p-8 text-center">
+          <h2 className="text-2xl font-black tracking-tight">Contact Us</h2>
+          <p className="mt-2 text-sm text-muted">
+            Questions before you join? Send us a message. We write it for you, you just pick a topic.
+          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/contact" className={primary}>Send a message</Link>
+          </div>
+          {(site.contact_whatsapp || site.contact_email || site.contact_hours) && (
+            <p className="mt-4 text-xs text-muted">
+              {[site.contact_whatsapp && `WhatsApp +${site.contact_whatsapp}`, site.contact_email, site.contact_hours]
+                .filter(Boolean)
+                .join("  ·  ")}
+            </p>
+          )}
+        </Reveal>
+      </section>
+
       <footer className="px-6 pb-10">
         <LegalLinks />
       </footer>

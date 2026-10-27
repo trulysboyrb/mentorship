@@ -8,6 +8,7 @@ export default function LegalLinks({ className = "" }: { className?: string }) {
       <Link href="/terms" className="hover:text-white">Terms</Link>
       <Link href="/privacy" className="hover:text-white">Privacy</Link>
       <Link href="/refund" className="hover:text-white">Refunds</Link>
+      <Link href="/contact" className="hover:text-white">Contact</Link>
     </nav>
   );
 }

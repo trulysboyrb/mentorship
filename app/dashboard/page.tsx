@@ -178,7 +178,7 @@ export default async function DashboardPage({
   const referred = !!profile?.referral_discount;
   const price = priceFor(profile?.learning_mode, referred, pricing);
   const waHref = site.pay_whatsapp
-    ? whatsappLink(profile?.full_name ?? "", profile?.email ?? "", profile?.learning_mode ?? null, { referred, pricing })
+    ? whatsappLink(profile?.full_name ?? "", profile?.email ?? "", profile?.learning_mode ?? null, { referred, pricing, number: site.contact_whatsapp })
     : null;
 
   const title = !cleared

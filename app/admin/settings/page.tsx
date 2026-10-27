@@ -5,6 +5,7 @@ import MaxDevicesForm from "@/components/MaxDevicesForm";
 import PayoutSettingsForm from "@/components/PayoutSettingsForm";
 import CryptoRateForm from "@/components/CryptoRateForm";
 import SiteSettingsForm from "@/components/SiteSettingsForm";
+import SiteMessagesForm from "@/components/SiteMessagesForm";
 import { getSiteStatus } from "@/lib/siteStatus";
 import { getAvailability } from "@/lib/payments/available";
 
@@ -36,6 +37,8 @@ export default async function AdminSettingsPage() {
         status={site}
         keys={{ wave: keyState.wave, card: keyState.card, crypto: keyState.crypto }}
       />
+
+      <SiteMessagesForm status={site} />
 
       <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Devices per student</h3>
       <MaxDevicesForm current={current} />

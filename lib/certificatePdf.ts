@@ -9,7 +9,7 @@ export type CertificateInput = {
   serial: string;
 };
 
-function plainText(s: string) {
+export function plainText(s: string) {
   const clean = s
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "")

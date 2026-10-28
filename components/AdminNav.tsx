@@ -16,6 +16,8 @@ const LINKS: [string, string][] = [
   ["/admin/payments", "Payments"],
   ["/admin/payouts", "Payouts"],
   ["/admin/analytics", "Analytics"],
+  ["/admin/alerts", "Alerts"],
+  ["/admin/activity", "Activity"],
   ["/admin/settings", "Settings"],
 ];
 
@@ -23,9 +25,15 @@ const LINKS: [string, string][] = [
 // waiting for a payout, and refreshes by itself the moment a new request comes in.
 export default async function AdminNav({ current }: { current: string }) {
   let waiting = 0;
+  let unreadAlerts = 0;
   try {
-    const { data } = await (await createClient()).rpc("admin_open_payouts");
+    const supabase = await createClient();
+    const [{ data }, { data: unread }] = await Promise.all([
+      supabase.rpc("admin_open_payouts"),
+      supabase.rpc("admin_unread_alerts"), // 0 if the Phase 18 SQL is not run yet
+    ]);
     waiting = typeof data === "number" ? data : 0;
+    unreadAlerts = typeof unread === "number" ? unread : 0;
   } catch {
     waiting = 0;
   }
@@ -33,6 +41,7 @@ export default async function AdminNav({ current }: { current: string }) {
   return (
     <>
       <RealtimeRefresh table="payout_requests" />
+      <RealtimeRefresh table="admin_alerts" />
       <header className="sticky top-0 z-40 -mx-6 border-b border-line bg-bg/85 px-6 py-3 backdrop-blur">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-lg font-black tracking-tight text-accent">ADMIN</h1>
@@ -60,6 +69,11 @@ export default async function AdminNav({ current }: { current: string }) {
                 {href === "/admin/payouts" && waiting > 0 && (
                   <span className="ml-1.5 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-extrabold text-white">
                     {waiting}
+                  </span>
+                )}
+                {href === "/admin/alerts" && unreadAlerts > 0 && (
+                  <span className="ml-1.5 rounded-full bg-danger px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                    {unreadAlerts}
                   </span>
                 )}
                 <span

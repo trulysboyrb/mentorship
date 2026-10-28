@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { inputCls, labelCls } from "@/components/ui";
+import { issueCertificate, type CertTemplate } from "@/lib/issueCertificate";
 
 const BUCKET = "certificates";
 const MAX_MB = 10;
@@ -22,10 +23,12 @@ async function looksLikePdf(file: File) {
 export default function CertificateModal({
   student,
   certificates,
+  template = null,
   onClose,
 }: {
   student: { id: string; full_name: string };
   certificates: CertItem[];
+  template?: CertTemplate;
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -35,6 +38,22 @@ export default function CertificateModal({
   const [file, setFile] = useState<File | null>(null);
   const [pct, setPct] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [stamping, setStamping] = useState(false);
+
+  // Uses the template from Settings: puts this student's name on it and issues the PDF.
+  async function fromTemplate() {
+    if (!template) return;
+    if (!window.confirm(`Put ${student.full_name}'s name on the certificate template and issue it?`)) return;
+    setError("");
+    setStamping(true);
+    try {
+      await issueCertificate(supabase, student, template);
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    }
+    setStamping(false);
+  }
 
   async function give(e: React.FormEvent) {
     e.preventDefault();
@@ -133,6 +152,10 @@ export default function CertificateModal({
           <button onClick={onClose} className={smallBtn}>Close</button>
         </div>
 
+        {error && (
+          <p role="alert" className="mt-4 break-words rounded-control border border-danger p-3 text-sm text-danger">{error}</p>
+        )}
+
         <h4 className="mt-6 text-[10px] font-extrabold tracking-widest text-muted uppercase">
           Issued certificates
         </h4>
@@ -153,6 +176,31 @@ export default function CertificateModal({
           </ul>
         )}
 
+        <div className="mt-6 border-t border-line pt-6">
+          <h4 className="text-[10px] font-extrabold tracking-widest text-muted uppercase">From your template</h4>
+          {template ? (
+            <>
+              <p className="mt-2 text-sm text-muted">
+                Puts {student.full_name}&apos;s name on the certificate template you uploaded in Settings.
+              </p>
+              <button
+                type="button"
+                onClick={fromTemplate}
+                disabled={stamping || pct !== null}
+                className="mt-3 w-full rounded-control bg-accent px-6 py-3.5 text-xs font-extrabold tracking-wider text-black uppercase disabled:opacity-50"
+              >
+                {stamping ? "Making certificate..." : "Give certificate from template"}
+              </button>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-muted">
+              No template yet. Upload one in Settings &gt; Certificate template and this button will put the
+              student&apos;s name on it automatically.
+            </p>
+          )}
+        </div>
+
+        <h4 className="mt-6 text-[10px] font-extrabold tracking-widest text-muted uppercase">Or upload your own PDF</h4>
         <form onSubmit={give} className="mt-6 space-y-5 border-t border-line pt-6">
           <div>
             <label className={labelCls} htmlFor="cert_title">Certificate title</label>
@@ -179,8 +227,6 @@ export default function CertificateModal({
               <p className="mt-1 text-xs text-muted">Uploading... {pct}%</p>
             </div>
           )}
-
-          {error && <p className="break-words text-sm text-danger">{error}</p>}
 
           <button type="submit" disabled={pct !== null}
             className="w-full rounded-control bg-accent px-6 py-3.5 text-xs font-extrabold tracking-wider text-black uppercase disabled:opacity-50">

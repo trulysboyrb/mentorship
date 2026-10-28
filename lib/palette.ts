@@ -40,7 +40,9 @@ export function baseItems(loggedIn: boolean, isAdmin: boolean): PaletteItem[] {
       ["/admin/payments", "Payments", "wave card crypto"],
       ["/admin/payouts", "Payouts", "referral"],
       ["/admin/analytics", "Analytics", "funnel"],
-      ["/admin/settings", "Settings", "banner contact maintenance prices"],
+      ["/admin/alerts", "Alerts", "new payment underpaid notifications bell"],
+      ["/admin/activity", "Activity log", "audit history who did what"],
+      ["/admin/settings", "Settings", "banner contact certificate template alerts maintenance prices"],
     ];
     for (const [href, label, kw] of a) {
       items.push({ id: `admin-${href}`, label, hint: "Admin", group: "Admin", href, keywords: kw });

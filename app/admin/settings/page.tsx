@@ -5,6 +5,8 @@ import MaxDevicesForm from "@/components/MaxDevicesForm";
 import PayoutSettingsForm from "@/components/PayoutSettingsForm";
 import CryptoRateForm from "@/components/CryptoRateForm";
 import SiteSettingsForm from "@/components/SiteSettingsForm";
+import CertTemplateForm from "@/components/CertTemplateForm";
+import AlertSettingsForm from "@/components/AlertSettingsForm";
 import SiteMessagesForm from "@/components/SiteMessagesForm";
 import { getSiteStatus } from "@/lib/siteStatus";
 import { getAvailability } from "@/lib/payments/available";
@@ -27,6 +29,9 @@ export default async function AdminSettingsPage() {
   const site = await getSiteStatus();
   // Whether each method's secret keys are set up on the server (ignores the on/off switches).
   const keyState = await getAvailability(supabase);
+  // Admin-only settings (certificate template, alert preferences). Empty if the Phase 19 SQL is not run yet.
+  const { data: adminSettings } = await supabase.rpc("admin_get_settings");
+  const adm = (adminSettings ?? {}) as Record<string, unknown>;
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-12">
@@ -39,6 +44,21 @@ export default async function AdminSettingsPage() {
       />
 
       <SiteMessagesForm status={site} />
+
+      <CertTemplateForm
+        path={typeof adm.cert_template_path === "string" ? adm.cert_template_path : ""}
+        layout={typeof adm.cert_layout === "string" ? adm.cert_layout : ""}
+      />
+
+      <AlertSettingsForm
+        emailReady={!!process.env.RESEND_API_KEY}
+        initial={{
+          payment: adm.alert_payment_on !== false,
+          underpaid: adm.alert_underpaid_on !== false,
+          payout: adm.alert_payout_on !== false,
+          email: typeof adm.alert_email === "string" ? adm.alert_email : "",
+        }}
+      />
 
       <h3 className="mt-10 text-xs font-extrabold tracking-widest uppercase">Devices per student</h3>
       <MaxDevicesForm current={current} />

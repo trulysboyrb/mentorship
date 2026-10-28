@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { BRAND } from "@/lib/config";
-import { buildCertificatePdf, makeSerial } from "@/lib/certificatePdf";
+import { issueCertificate, type CertTemplate } from "@/lib/issueCertificate";
 import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
 import AdminDevicesModal from "@/components/AdminDevicesModal";
@@ -46,7 +45,9 @@ export default function AdminStudents({
   notes,
   initialQuery = "",
   pricing = DEFAULT_PRICING,
+  certTemplate = null,
 }: {
+  certTemplate?: CertTemplate;
   initialQuery?: string;
   pricing?: Pricing;
   students: Student[];
@@ -125,54 +126,17 @@ export default function AdminStudents({
     router.refresh();
   }
 
-  // One click: builds the certificate PDF with the student's name and issues it.
+  // One click: builds the certificate PDF with the student's name (on the admin's template if one is set) and issues it.
   async function approveCertificate(s: Student) {
-    if (!window.confirm(`Issue a Certificate of Completion to ${s.full_name}?`)) return;
+    const how = certTemplate ? "using your certificate template" : "with the standard design";
+    if (!window.confirm(`Issue a Certificate of Completion to ${s.full_name} ${how}?`)) return;
     setBusy(s.id);
     setError("");
-    const supabase = createClient();
-    let path: string | null = null;
-
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const now = new Date();
-      const serial = makeSerial(now);
-      const bytes = await buildCertificatePdf({
-        name: s.full_name,
-        courseName: BRAND,
-        dateText: now.toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-        serial,
-      });
-
-      path = `${s.id}/${Date.now()}-certificate-of-completion.pdf`;
-      const { error: upErr } = await supabase.storage
-        .from("certificates")
-        .upload(path, new Blob([bytes.slice().buffer as ArrayBuffer], { type: "application/pdf" }), {
-          contentType: "application/pdf",
-        });
-      if (upErr) throw new Error(upErr.message);
-
-      const { error: dbErr } = await supabase.from("certificates").insert({
-        user_id: s.id,
-        title: "Certificate of Completion",
-        file_path: path,
-        issued_by: user?.id,
-        serial,
-      });
-      if (dbErr) {
-        await supabase.storage.from("certificates").remove([path]);
-        throw new Error(dbErr.message);
-      }
+      await issueCertificate(createClient(), s, certTemplate);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     }
-
     setBusy(null);
     router.refresh();
   }
@@ -352,6 +316,7 @@ export default function AdminStudents({
         <CertificateModal
           student={students.find((x) => x.id === certFor)!}
           certificates={certificates[certFor] ?? []}
+          template={certTemplate}
           onClose={() => setCertFor(null)}
         />
       )}

@@ -51,6 +51,11 @@ export default async function AdminPage({
     supabase.from("lessons").select("id", { count: "exact", head: true }),
   ]);
 
+  // Certificate template from Settings (admin only). If the Phase 18 SQL has not been run, this is just empty.
+  const { data: adminSettings } = await supabase.rpc("admin_get_settings");
+  const tplPath = typeof adminSettings?.cert_template_path === "string" ? adminSettings.cert_template_path : "";
+  const certTemplate = tplPath ? { path: tplPath, layout: String(adminSettings?.cert_layout ?? "") } : null;
+
   const completed: Record<string, number> = {};
   const finished: Record<string, boolean> = {};
   (
@@ -126,6 +131,7 @@ export default async function AdminPage({
         finished={finished}
         certificates={certificates}
         notes={notes}
+        certTemplate={certTemplate}
       />
     </main>
   );

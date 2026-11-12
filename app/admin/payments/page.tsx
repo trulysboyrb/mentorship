@@ -139,7 +139,12 @@ export default async function AdminPaymentsPage() {
                   </td>
                   <td className="px-4 py-3">
                     {formatGMD(p.amount_gmd)}
-                    {p.amount_usd !== null && <span className="block text-xs text-muted">${Number(p.amount_usd).toFixed(2)}</span>}
+                    {p.amount_usd !== null && (
+                      <span className="block text-xs text-muted">
+                        {p.method === "card" ? "charged " : ""}${Number(p.amount_usd).toFixed(2)}
+                        {p.method === "card" ? " (US dollars)" : ""}
+                      </span>
+                    )}
                   </td>
                   <td className={`px-4 py-3 font-bold uppercase ${STATUS_COLOR[p.status] ?? ""}`}>{p.status}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted">{p.id.slice(0, 8).toUpperCase()}</td>

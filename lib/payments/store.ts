@@ -1,11 +1,27 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { PaymentStore } from "./handlers";
 import { emailPaymentAlert } from "./alertHook";
+import { paidGmdFor } from "../currency";
 
 // The real PaymentStore: talks to the database through the service role client.
 export function supabasePaymentStore(db: SupabaseClient): PaymentStore {
   return {
-    async markPaid(paymentId, ref, paidGmd) {
+    async markPaid(paymentId, ref, paidAmount) {
+      // Card payments in US dollars report dollars. The database compares dalasi, so convert first.
+      let paidGmd = paidAmount;
+      if (paidAmount !== null) {
+        const { data: pay } = await db.from("payments").select("*").eq("id", paymentId).maybeSingle();
+        if (pay) {
+          paidGmd = paidGmdFor(
+            {
+              currency: pay.currency ?? null,
+              amount_gmd: Number(pay.amount_gmd),
+              amount_charged: pay.amount_charged == null ? null : Number(pay.amount_charged),
+            },
+            paidAmount
+          );
+        }
+      }
       const { data, error } = await db.rpc("payment_mark_paid", {
         p_payment: paymentId,
         p_ref: ref,

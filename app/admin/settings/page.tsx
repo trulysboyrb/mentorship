@@ -8,7 +8,11 @@ import SiteSettingsForm from "@/components/SiteSettingsForm";
 import CertTemplateForm from "@/components/CertTemplateForm";
 import AlertSettingsForm from "@/components/AlertSettingsForm";
 import SiteMessagesForm from "@/components/SiteMessagesForm";
+import CurrencySettings, { type CurrencyPreviewRow } from "@/components/CurrencySettings";
 import { getSiteStatus } from "@/lib/siteStatus";
+import { getResolvedCurrency } from "@/lib/money";
+import { getUsdRates, fxFor } from "@/lib/fx";
+import { priceText, type CurrencyCode } from "@/lib/currency";
 import { getAvailability } from "@/lib/payments/available";
 
 export default async function AdminSettingsPage() {
@@ -29,6 +33,16 @@ export default async function AdminSettingsPage() {
   const site = await getSiteStatus();
   // Whether each method's secret keys are set up on the server (ignores the on/off switches).
   const keyState = await getAvailability(supabase);
+
+  // Preview of the approximate prices visitors will see.
+  const { data: rateRaw } = await supabase.rpc("get_gmd_per_usd");
+  const gmdPerUsd = rateRaw ? Number(rateRaw) : site.gmd_per_usd;
+  const { rates, live } = await getUsdRates();
+  const mine = await getResolvedCurrency();
+  const preview: CurrencyPreviewRow[] = (["USD", "EUR", "GBP", "CAD", "NGN", "ZAR"] as CurrencyCode[]).map((code) => {
+    const ctx = { code, fx: fxFor(code, rates), gmdPerUsd: gmdPerUsd ?? null, enabled: true };
+    return { code, online: priceText(site.price_online, ctx).text, inPerson: priceText(site.price_in_person, ctx).text };
+  });
   // Admin-only settings (certificate template, alert preferences). Empty if the Phase 19 SQL is not run yet.
   const { data: adminSettings } = await supabase.rpc("admin_get_settings");
   const adm = (adminSettings ?? {}) as Record<string, unknown>;
@@ -41,6 +55,14 @@ export default async function AdminSettingsPage() {
       <SiteSettingsForm
         status={site}
         keys={{ wave: keyState.wave, card: keyState.card, crypto: keyState.crypto }}
+      />
+
+      <CurrencySettings
+        on={site.local_prices_on}
+        gmdPerUsd={gmdPerUsd ?? null}
+        liveRates={live}
+        detected={`${mine.country ?? "country unknown"}, shown in ${mine.code}`}
+        preview={preview}
       />
 
       <SiteMessagesForm status={site} />

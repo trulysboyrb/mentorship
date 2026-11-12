@@ -6,6 +6,8 @@ import { parseSiteStatus, pricingOf } from "@/lib/siteSettings";
 import { availability } from "@/lib/paymentConfig";
 import { siteUrl } from "@/lib/paymentConfig";
 import { gmdToUsd } from "@/lib/paymentMath";
+import { cardCharge, type Charge } from "@/lib/currency";
+import { getResolvedCurrency } from "@/lib/money";
 import { isPayMethod } from "@/lib/paymentMethods";
 import { startCheckout } from "@/lib/payments/start";
 
@@ -63,6 +65,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "The crypto price is not set up yet." }, { status: 503 });
   }
 
+  // Which currency does the card get charged in? Dalasi in the Gambia, US dollars everywhere else.
+  // Decided HERE from the visitor's country (or the currency they picked), never from the browser.
+  // If the admin switched local prices off, or the dalasi-per-dollar rate is missing, it is dalasi as before.
+  let charge: Charge = { currency: "GMD", amount: price };
+  if (method === "card" && site.local_prices_on) {
+    const resolved = await getResolvedCurrency();
+    charge = cardCharge(price, { code: resolved.code, gmdPerUsd }) ?? charge;
+  }
+  const inDollars = method === "card" && charge.currency === "USD";
+
   // Simple spam guard: at most 10 new checkouts per hour per student.
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { count } = await db
@@ -76,9 +88,9 @@ export async function POST(req: Request) {
 
   // Reuse a recent unfinished checkout for the same method and price.
   const fifteenAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
-  const { data: existing } = await db
+  const { data: recent } = await db
     .from("payments")
-    .select("id, checkout_url, amount_gmd")
+    .select("*")
     .eq("user_id", user.id)
     .eq("method", method)
     .eq("status", "pending")
@@ -86,15 +98,28 @@ export async function POST(req: Request) {
     .gte("created_at", fifteenAgo)
     .not("checkout_url", "is", null)
     .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(5);
+  // Only reuse a checkout in the same currency (rows made before Phase 20 have no currency: dalasi).
+  const existing = (recent ?? []).find(
+    (r: { currency?: string | null; amount_charged?: number | string | null }) =>
+      (r.currency ?? "GMD") === charge.currency &&
+      (charge.currency === "GMD" || Number(r.amount_charged) === charge.amount)
+  );
   if (existing?.checkout_url) {
     return NextResponse.json({ url: existing.checkout_url, payment: existing.id });
   }
 
   const { data: row, error: insErr } = await db
     .from("payments")
-    .insert({ user_id: user.id, method, provider: avail.provider, amount_gmd: price, amount_usd: amountUsd })
+    .insert({
+      user_id: user.id,
+      method,
+      provider: avail.provider,
+      amount_gmd: price,
+      amount_usd: inDollars ? charge.amount : amountUsd,
+      // Only dollar charges need the new columns, so dalasi payments work exactly as before.
+      ...(inDollars ? { currency: "USD", amount_charged: charge.amount } : {}),
+    })
     .select("id")
     .single();
   if (insErr || !row) {
@@ -108,6 +133,7 @@ export async function POST(req: Request) {
     paymentId: row.id,
     amountGmd: price,
     amountUsd,
+    charge: method === "card" ? charge : undefined,
     studentName: profile.full_name || user.email || "student",
     site: siteUrl(process.env, origin),
     env: process.env,

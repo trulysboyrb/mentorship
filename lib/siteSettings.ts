@@ -19,6 +19,8 @@ export type SiteStatus = {
   contact_email: string;
   contact_business: string;
   contact_hours: string;
+  local_prices_on: boolean; // show approximate prices in the visitor's currency
+  gmd_per_usd: number | null; // the admin's dalasi per US dollar (public, it is only a rate)
   is_admin: boolean;
 };
 
@@ -41,6 +43,8 @@ export const DEFAULT_STATUS: SiteStatus = {
   contact_email: "",
   contact_business: "ApexTrade Academy",
   contact_hours: "",
+  local_prices_on: true,
+  gmd_per_usd: null,
   is_admin: false,
 };
 
@@ -50,6 +54,10 @@ const int = (v: unknown, min: number, max: number, fallback: number) => {
 };
 const text = (v: unknown, max: number, fallback: string) =>
   typeof v === "string" ? v.trim().slice(0, max) : fallback;
+const rate = (v: unknown): number | null => {
+  const n = typeof v === "number" ? v : typeof v === "string" ? Number(v) : NaN;
+  return Number.isFinite(n) && n > 0 && n < 100000 ? n : null;
+};
 const bool = (v: unknown, fallback: boolean) => (typeof v === "boolean" ? v : fallback);
 
 // Never throws. If the SQL has not been run yet (or the call fails) the site keeps working
@@ -74,6 +82,8 @@ export function parseSiteStatus(raw: unknown): SiteStatus {
     contact_email: typeof r.contact_email === "string" && /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(r.contact_email.trim()) ? r.contact_email.trim() : "",
     contact_business: text(r.contact_business, 80, d.contact_business) || d.contact_business,
     contact_hours: text(r.contact_hours, 120, d.contact_hours),
+    local_prices_on: bool(r.local_prices_on, d.local_prices_on),
+    gmd_per_usd: rate(r.gmd_per_usd),
     is_admin: bool(r.is_admin, d.is_admin),
   };
 }

@@ -6,8 +6,10 @@ import RotatingWord from "@/components/RotatingWord";
 import HeroChart from "@/components/HeroChart";
 import Ticker from "@/components/Ticker";
 import { FAQ, STEPS, TESTIMONIALS } from "@/lib/landing";
-import { formatGMD } from "@/lib/pricing";
 import { getSiteStatus } from "@/lib/siteStatus";
+import { getMoneyCtx } from "@/lib/money";
+import { chargeNote, priceText, waveAllowed } from "@/lib/currency";
+import CurrencySwitcher from "@/components/CurrencySwitcher";
 
 const primary =
   "rounded-(--radius-control) bg-white px-10 py-3.5 text-center text-xs font-extrabold tracking-wider text-black uppercase transition hover:bg-accent hover:-translate-y-0.5";
@@ -29,6 +31,7 @@ const FEATURES = [
 
 export default async function LandingPage() {
   const site = await getSiteStatus();
+  const { ctx, resolved } = await getMoneyCtx(site);
   const plans = [
     {
       name: "Online",
@@ -155,7 +158,7 @@ export default async function LandingPage() {
           <Reveal>
             <h2 className={heading}>Price</h2>
             <p className="mt-3 max-w-xl text-sm text-muted">
-              One payment, no subscription. Pay online with Wave, card or crypto, or on WhatsApp. Your courses unlock as soon as the payment is confirmed.
+              One payment, no subscription. Pay online with {waveAllowed(ctx.code) ? "Wave, card or crypto" : "card or crypto"}, or on WhatsApp. Your courses unlock as soon as the payment is confirmed.
             </p>
           </Reveal>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
@@ -163,8 +166,9 @@ export default async function LandingPage() {
               <Reveal key={p.name} delay={i * 0.1}>
                 <div className="lift flex h-full flex-col rounded-(--radius-card) border border-line bg-surface p-8">
                   <h3 className="text-xs font-extrabold tracking-widest uppercase">{p.name}</h3>
-                  <p className="mt-4 text-4xl font-black">{formatGMD(p.price)}</p>
+                  <p className="mt-4 text-4xl font-black">{priceText(p.price, ctx).text}</p>
                   <p className="mt-1 text-xs text-muted">one-time payment</p>
+                  {chargeNote(p.price, ctx) && <p className="mt-1 text-[11px] text-muted">{chargeNote(p.price, ctx)}</p>}
                   <ul className="mt-6 flex-1 space-y-3 text-sm text-white/80">
                     {p.points.map((pt) => (
                       <li key={pt} className="flex gap-3">
@@ -178,9 +182,12 @@ export default async function LandingPage() {
               </Reveal>
             ))}
           </div>
-          <p className="mt-5 text-xs text-muted">
-            Have a referral code from a student? You get {site.referral_percent}% off.
-          </p>
+          <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-muted">
+              Have a referral code from a student? You get {site.referral_percent}% off.
+            </p>
+            {site.local_prices_on && <CurrencySwitcher code={resolved.code} country={resolved.country} source={resolved.source} />}
+          </div>
         </section>
 
         {/* Real testimonials only: hidden until you add some in lib/landing.ts */}

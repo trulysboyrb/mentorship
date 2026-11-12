@@ -4,7 +4,9 @@ import { checkDevice } from "@/lib/device";
 import { whatsappLink } from "@/lib/whatsapp";
 import PayButtons from "@/components/PayButtons";
 import { getAvailability } from "@/lib/payments/available";
-import { formatGMD, priceFor } from "@/lib/pricing";
+import { priceFor } from "@/lib/pricing";
+import { getMoneyCtx } from "@/lib/money";
+import { priceText, waveAllowed } from "@/lib/currency";
 import { getSiteStatus } from "@/lib/siteStatus";
 import { pricingOf } from "@/lib/siteSettings";
 import DashboardShell from "@/components/DashboardShell";
@@ -177,6 +179,8 @@ export default async function DashboardPage({
   const payAvail = await getAvailability(supabase, site);
   const referred = !!profile?.referral_discount;
   const price = priceFor(profile?.learning_mode, referred, pricing);
+  const { ctx: moneyCtx } = await getMoneyCtx(site);
+  const wave = waveAllowed(moneyCtx.enabled ? moneyCtx.code : "GMD");
   const waHref = site.pay_whatsapp
     ? whatsappLink(profile?.full_name ?? "", profile?.email ?? "", profile?.learning_mode ?? null, { referred, pricing, number: site.contact_whatsapp })
     : null;
@@ -332,12 +336,12 @@ export default async function DashboardPage({
           <div className="absolute inset-x-6 top-40 mx-auto max-w-md rounded-card border border-line bg-surface p-8 text-center shadow-2xl">
             <h3 className="text-xl font-black">Unlock your courses</h3>
             <p className="mt-3 text-sm text-muted">
-              Pay online with Wave, Card or Crypto and this page unlocks by itself the moment
+              Pay online with {wave ? "Wave, Card or Crypto" : "Card or Crypto"} and this page unlocks by itself the moment
               the payment is verified. Or pay on WhatsApp and we will confirm it.
             </p>
             <p className="mt-4 text-sm">
               <span className="text-muted">Your price: </span>
-              <span className="font-bold">{formatGMD(price.final)}</span>
+              <span className="font-bold">{priceText(price.final, moneyCtx).text}</span>
               {referred && (
                 <span className="mt-1 block text-xs text-accent">
                   {pricing.referralPercent}% referral discount applied
@@ -346,7 +350,7 @@ export default async function DashboardPage({
             </p>
             <PayButtons
               waHref={waHref}
-              enabled={{ wave: payAvail.wave.ok, card: payAvail.card.ok, crypto: payAvail.crypto.ok }}
+              enabled={{ wave: payAvail.wave.ok && wave, card: payAvail.card.ok, crypto: payAvail.crypto.ok }}
             />
           </div>
         )}

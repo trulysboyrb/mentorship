@@ -4,6 +4,8 @@
 export type IntentInput = {
   orderId: string;
   amountGmd: number;
+  // What the card is really charged. Dalasi for the Gambia, US dollars for everyone else.
+  charge?: { currency: string; amount: number };
   title: string;
   description: string;
   returnUrl: string;
@@ -13,8 +15,8 @@ export type IntentInput = {
 
 export function buildIntentBody(i: IntentInput) {
   const data: Record<string, unknown> = {
-    amount: i.amountGmd,
-    currency: "GMD",
+    amount: i.charge ? Math.round(i.charge.amount * 100) / 100 : i.amountGmd,
+    currency: i.charge?.currency ?? "GMD",
     title: i.title,
     description: i.description,
     metadata: { order_id: i.orderId },

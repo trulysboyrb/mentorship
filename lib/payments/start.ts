@@ -9,6 +9,7 @@ export type StartInput = {
   paymentId: string;
   amountGmd: number;
   amountUsd: number | null;
+  charge?: { currency: "GMD" | "USD"; amount: number }; // card only; default is dalasi
   studentName: string;
   site: string; // e.g. https://yourapp.vercel.app
   env: Env;
@@ -38,6 +39,7 @@ export async function startCheckout(i: StartInput): Promise<StartResult> {
           buildIntentBody({
             orderId: i.paymentId,
             amountGmd: i.amountGmd,
+            charge: i.charge,
             title: TITLE,
             description: `Course fee for ${i.studentName}`,
             returnUrl,
@@ -49,7 +51,13 @@ export async function startCheckout(i: StartInput): Promise<StartResult> {
       const json = await res.json().catch(() => null);
       if (!res.ok) {
         const msg = (json as { message?: string } | null)?.message;
-        return { ok: false, error: `Modem Pay said: ${msg ?? `error ${res.status}`}` };
+        const usd = i.charge?.currency === "USD";
+        return {
+          ok: false,
+          error: usd
+            ? `Modem Pay could not take a US dollar card payment (${msg ?? `error ${res.status}`}). Please use Crypto or WhatsApp.`
+            : `Modem Pay said: ${msg ?? `error ${res.status}`}`,
+        };
       }
       const parsed = parseIntentResponse(json);
       return parsed ? { ok: true, ...parsed } : { ok: false, error: "Modem Pay did not return a payment link." };

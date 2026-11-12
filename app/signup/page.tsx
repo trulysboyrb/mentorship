@@ -8,7 +8,8 @@ import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
 import PasswordInput from "@/components/PasswordInput";
 import { passwordStrength, validEmail } from "@/lib/passwordStrength";
-import { formatGMD, priceFor } from "@/lib/pricing";
+import { priceFor } from "@/lib/pricing";
+import { priceText, isCurrency, type CurrencyCode, type MoneyCtx } from "@/lib/currency";
 import { DEFAULT_STATUS, parseSiteStatus, pricingOf, type SiteStatus } from "@/lib/siteSettings";
 import { normalizeReferralCode } from "@/lib/referral";
 
@@ -30,6 +31,8 @@ export default function SignupPage() {
   const [step, setStep] = useState<1 | 2>(1);
   const [site, setSite] = useState<SiteStatus>(DEFAULT_STATUS);
   const [siteChecked, setSiteChecked] = useState(false);
+  // The visitor's currency, worked out on the server from their country.
+  const [cur, setCur] = useState<{ code: CurrencyCode; fx: number | null } | null>(null);
   const [codeState, setCodeState] = useState<CodeState>("idle");
   const [agreed, setAgreed] = useState(false);
   const [error, setError] = useState("");
@@ -67,6 +70,26 @@ export default function SignupPage() {
       alive = false;
     };
   }, []);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/currency", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!alive) return;
+        setCur(j && isCurrency(j.code) ? { code: j.code, fx: typeof j.fx === "number" ? j.fx : null } : { code: "GMD", fx: null });
+      })
+      .catch(() => alive && setCur({ code: "GMD", fx: null }));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const money: MoneyCtx = {
+    code: cur?.code ?? "GMD",
+    fx: cur?.fx ?? null,
+    gmdPerUsd: site.gmd_per_usd,
+    enabled: site.local_prices_on,
+  };
 
   // A friend's share link looks like /signup?ref=K7M2QX
   useEffect(() => {
@@ -281,12 +304,14 @@ export default function SignupPage() {
                     onChange={() => set("learning_mode", value)} />
                   <span className="block text-sm">{label}</span>
                   <span className="mt-1 block text-[11px] text-muted/75">
-                    {referred ? (
+                    {!cur || !siteChecked ? (
+                      "\u00a0"
+                    ) : referred ? (
                       <>
-                        <s>{formatGMD(base)}</s> {formatGMD(final)}
+                        <s>{priceText(base, money).text}</s> {priceText(final, money).text}
                       </>
                     ) : (
-                      formatGMD(base)
+                      priceText(base, money).text
                     )}
                   </span>
                 </label>

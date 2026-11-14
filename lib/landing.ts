@@ -9,6 +9,14 @@ export const STEPS: { title: string; text: string }[] = [
 
 export const FAQ: { q: string; a: string }[] = [
   {
+    q: "What is The Forbes Academy?",
+    a: "The Forbes Academy is a professional training institute based in The Gambia, dedicated to empowering leaders, cultivating excellence, and strengthening institutional performance across sectors.",
+  },
+  {
+    q: "What type of training does The Forbes Academy offer?",
+    a: "Training, mentoring and coaching for aspiring public speakers and presenters, online or in person.",
+  },
+  {
     q: "How do I pay?",
     a: "After you sign up you can pay online with Wave, card or crypto, and your courses unlock automatically once the payment is verified. You can also pay on WhatsApp and we confirm it by hand. It is a one-time payment.",
   },

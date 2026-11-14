@@ -26,6 +26,32 @@ const FEATURES = [
   { icon: "▢", name: "Works on your phone", text: "Install it like an app and learn anywhere on your phone or laptop." },
 ];
 
+const iconProps = { width: 22, height: 22, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round", strokeLinejoin: "round" } as const;
+const ABOUT_POINTS = [
+  {
+    name: "Our Vision",
+    text: "To champion and nurture excellence in every sphere of national life.",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M2 9l10-5 10 5-10 5L2 9z" />
+        <path d="M6 11.5V16c0 1.2 2.7 3 6 3s6-1.8 6-3v-4.5" />
+        <path d="M22 9v6" />
+      </svg>
+    ),
+  },
+  {
+    name: "Our Mission",
+    text: "Through high-quality, context-appropriate training, mentoring, and coaching, TFA equips professionals and institutions with the confidence, competence, and clarity needed to reach their full potential.",
+    icon: (
+      <svg {...iconProps}>
+        <path d="M3 10v4h3l7 4V6L6 10H3z" />
+        <path d="M16.5 9a4 4 0 010 6" />
+        <path d="M19 6.5a8 8 0 010 11" />
+      </svg>
+    ),
+  },
+];
+
 export default async function LandingPage() {
   const site = await getSiteStatus();
   const { ctx, resolved } = await getMoneyCtx(site);
@@ -55,6 +81,9 @@ export default async function LandingPage() {
             <span className="text-sm font-black tracking-tight text-accent">THE FORBES ACADEMY</span>
           </span>
           <nav className="flex items-center gap-5">
+            <a href="#about" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
+              About
+            </a>
             <a href="#prices" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
               Prices
             </a>
@@ -90,6 +119,45 @@ export default async function LandingPage() {
               <Link href="/signup" className={primary}>Sign up</Link>
               <Link href="/login" className={secondary}>Login</Link>
             </div>
+          </div>
+        </section>
+
+        {/* About */}
+        <section id="about" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+          <div className="grid items-center gap-10 lg:grid-cols-2">
+            <Reveal>
+              <div className="overflow-hidden rounded-(--radius-card) border border-line bg-surface">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/about.jpg"
+                  alt="A student holding up her certificate at a Forbes Academy training"
+                  width={1100}
+                  height={825}
+                  loading="lazy"
+                  className="aspect-4/3 w-full object-cover"
+                />
+              </div>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <h2 className={heading}>About us</h2>
+              <p className={title}>Welcome to The Forbes Academy</p>
+              <p className="mt-6 border-l-2 border-accent pl-5 text-sm leading-relaxed text-muted">
+                The Forbes Academy is a premier professional training institute based in The Gambia, dedicated to empowering leaders, cultivating excellence, and strengthening institutional performance across sectors. TFA is registered as Forbes Executive Training (FET) in Nigeria.
+              </p>
+              <div className="mt-8 space-y-6">
+                {ABOUT_POINTS.map((a) => (
+                  <div key={a.name} className="flex items-start gap-4">
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-accent" aria-hidden>
+                      {a.icon}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold">{a.name}</h3>
+                      <p className="mt-1 text-sm leading-relaxed text-muted">{a.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Reveal>
           </div>
         </section>
 
@@ -133,6 +201,31 @@ export default async function LandingPage() {
               </li>
             ))}
           </ol>
+        </section>
+
+        {/* Tutor */}
+        <section id="tutor" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+          <Reveal className="text-center">
+            <h2 className={heading}>Course instructors</h2>
+            <p className={title}>Meet our tutor</p>
+          </Reveal>
+          <Reveal delay={0.08} className="mx-auto mt-10 max-w-xs">
+            <figure className="lift overflow-hidden rounded-(--radius-card) border border-line bg-surface">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/tutor.jpg"
+                alt="Pastor Francis Forbes"
+                width={720}
+                height={901}
+                loading="lazy"
+                className="aspect-4/5 w-full object-cover object-top"
+              />
+              <figcaption className="px-5 py-5 text-center">
+                <p className="text-lg font-bold">Pastor Francis Forbes</p>
+                <p className="mt-1 text-sm text-muted">CEO, Coach and Lead Trainer</p>
+              </figcaption>
+            </figure>
+          </Reveal>
         </section>
 
         {/* Prices */}
@@ -195,23 +288,37 @@ export default async function LandingPage() {
         )}
 
         {/* FAQ */}
-        <section id="faq" className="mx-auto max-w-3xl scroll-mt-20 px-6 py-16">
-          <Reveal>
-            <h2 className={heading}>Questions</h2>
-          </Reveal>
-          <Reveal delay={0.05}>
-            <div className="mt-8 divide-y divide-line border-y border-line">
-              {FAQ.map((f) => (
-                <details key={f.q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-semibold">
-                    {f.q}
-                    <span className="text-accent transition group-open:rotate-45" aria-hidden>+</span>
-                  </summary>
-                  <p className="mt-3 text-sm leading-relaxed text-muted">{f.a}</p>
-                </details>
-              ))}
-            </div>
-          </Reveal>
+        <section id="faq" className="mx-auto max-w-5xl scroll-mt-20 px-6 py-16">
+          <div className="grid items-start gap-10 lg:grid-cols-2">
+            <Reveal>
+              <div className="overflow-hidden rounded-(--radius-card) border border-line bg-surface">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/images/classroom.jpg"
+                  alt="A Forbes Academy classroom set up for a training day"
+                  width={1100}
+                  height={825}
+                  loading="lazy"
+                  className="aspect-4/3 w-full object-cover"
+                />
+              </div>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <h2 className={heading}>FAQ</h2>
+              <p className={title}>Frequently asked questions</p>
+              <div className="mt-8 space-y-3">
+                {FAQ.map((f) => (
+                  <details key={f.q} className="group rounded-(--radius-card) border border-line bg-surface px-5 py-4">
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-sm font-semibold">
+                      {f.q}
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-accent transition group-open:rotate-45" aria-hidden>+</span>
+                    </summary>
+                    <p className="mt-3 text-sm leading-relaxed text-muted">{f.a}</p>
+                  </details>
+                ))}
+              </div>
+            </Reveal>
+          </div>
         </section>
 
         {/* Final call */}

@@ -7,6 +7,7 @@ import { getSiteStatus } from "@/lib/siteStatus";
 import { getMoneyCtx } from "@/lib/money";
 import { chargeNote, priceText, waveAllowed } from "@/lib/currency";
 import CurrencySwitcher from "@/components/CurrencySwitcher";
+import BrandLogo from "@/components/BrandLogo";
 
 const primary =
   "rounded-(--radius-control) bg-white px-10 py-3.5 text-center text-xs font-extrabold tracking-wider text-black uppercase transition hover:bg-accent hover:-translate-y-0.5";
@@ -49,7 +50,10 @@ export default async function LandingPage() {
 
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-sm font-black tracking-tight text-accent">FORBES ACADEMY</span>
+          <span className="inline-flex items-center gap-2.5">
+            <BrandLogo size={36} />
+            <span className="text-sm font-black tracking-tight text-accent">THE FORBES ACADEMY</span>
+          </span>
           <nav className="flex items-center gap-5">
             <a href="#prices" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
               Prices

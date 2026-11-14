@@ -1,5 +1,6 @@
 import Link from "next/link";
 import LegalLinks from "@/components/LegalLinks";
+import BrandLogo from "@/components/BrandLogo";
 
 type Lesson = { id: string; position: number; title: string };
 type Module = { id: string; position: number; title: string; lessons: Lesson[] };
@@ -54,8 +55,9 @@ export default function Sidebar({
 
   return (
     <div className="flex min-h-full flex-col p-5">
-      <h1 className="mb-6 text-xl font-black tracking-tight text-accent">
-        FORBES ACADEMY
+      <h1 className="mb-6 flex items-center gap-2.5 text-lg font-black tracking-tight text-accent">
+        <BrandLogo size={40} />
+        <span>THE FORBES ACADEMY</span>
       </h1>
 
       {cleared && (

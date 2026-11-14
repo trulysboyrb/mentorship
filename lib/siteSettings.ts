@@ -41,7 +41,7 @@ export const DEFAULT_STATUS: SiteStatus = {
   banner_tone: "info",
   contact_whatsapp: "",
   contact_email: "",
-  contact_business: "Forbes Academy",
+  contact_business: "The Forbes Academy",
   contact_hours: "",
   local_prices_on: true,
   gmd_per_usd: null,

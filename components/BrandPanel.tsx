@@ -1,3 +1,4 @@
+import BrandLogo from "@/components/BrandLogo";
 const POINTS = [
   "Short video lessons, module by module",
   "Quizzes that unlock the next module",
@@ -12,7 +13,10 @@ export default function BrandPanel() {
       <div className="grid-bg pointer-events-none absolute inset-0 opacity-60" />
       <div className="anim-glow pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
 
-      <p className="relative text-sm font-black tracking-tight text-accent">FORBES ACADEMY</p>
+      <p className="relative flex items-center gap-3 text-sm font-black tracking-tight text-accent">
+        <BrandLogo size={44} />
+        THE FORBES ACADEMY
+      </p>
 
       <div className="relative">
         <h2 className="anim-fade-up text-4xl leading-tight font-black tracking-tight xl:text-5xl">

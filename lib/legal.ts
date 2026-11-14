@@ -1,5 +1,5 @@
 // Edit these values, then re-read each legal page once.
-export const BUSINESS_NAME = "Forbes Academy";
+export const BUSINESS_NAME = "The Forbes Academy";
 export const CONTACT_EMAIL = "support@yourdomain.com"; // CHANGE ME
 export const GOVERNING_COUNTRY = "The Gambia";
 export const REFUND_DAYS = 7; // CHANGE ME: refund request window, in days

@@ -15,7 +15,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Forbes Academy",
+  title: "The Forbes Academy",
   description:
     "Learn public speaking, structured into clear modules.",
 };

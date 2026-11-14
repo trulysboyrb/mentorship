@@ -4,6 +4,7 @@ import { getSiteStatus } from "@/lib/siteStatus";
 import { WHATSAPP_NUMBER } from "@/lib/config";
 import ContactTemplate from "@/components/ContactTemplate";
 import LegalLinks from "@/components/LegalLinks";
+import BrandLogo from "@/components/BrandLogo";
 
 export const metadata = { title: "Contact Us" };
 
@@ -23,8 +24,9 @@ export default async function ContactPage() {
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
-      <Link href="/" className="text-sm font-black tracking-tight text-accent">
-        FORBES ACADEMY
+      <Link href="/" className="inline-flex items-center gap-2.5 text-sm font-black tracking-tight text-accent">
+        <BrandLogo size={36} />
+        THE FORBES ACADEMY
       </Link>
       <h1 className="mt-10 text-4xl font-black tracking-tight">Contact Us</h1>
       <p className="mt-2 text-sm text-muted">{site.contact_business}</p>

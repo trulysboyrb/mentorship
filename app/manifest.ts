@@ -2,8 +2,8 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Forbes Academy",
-    short_name: "Forbes",
+    name: "The Forbes Academy",
+    short_name: "Forbes Academy",
     description: "Learn public speaking, step by step.",
     start_url: "/dashboard",
     scope: "/",

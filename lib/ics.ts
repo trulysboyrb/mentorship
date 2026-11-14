@@ -45,11 +45,11 @@ export function buildIcs(ev: IcsEvent, now = new Date()): string {
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//ApexTrade Academy//Live class//EN",
+    "PRODID:-//Forbes Academy//Live class//EN",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
-    `UID:${ev.id}@apextrade-academy`,
+    `UID:${ev.id}@forbes-academy`,
     `DTSTAMP:${stamp(now)}`,
     `DTSTART:${stamp(ev.startsAt)}`,
     `DTEND:${stamp(end)}`,

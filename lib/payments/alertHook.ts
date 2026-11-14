@@ -37,7 +37,7 @@ export async function emailPaymentAlert(db: SupabaseClient, paymentId: string, o
     });
     await sendResend(fetch as never, {
       apiKey,
-      from: process.env.ALERT_FROM_EMAIL || "ApexTrade Alerts <onboarding@resend.dev>",
+      from: process.env.ALERT_FROM_EMAIL || "Forbes Alerts <onboarding@resend.dev>",
       to,
       ...mail,
     });

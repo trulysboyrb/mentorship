@@ -15,9 +15,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "ApexTrade Academy",
+  title: "Forbes Academy",
   description:
-    "Learn modern trading and blockchain skills, structured into clear modules.",
+    "Learn public speaking, structured into clear modules.",
 };
 
 export default async function RootLayout({

@@ -23,7 +23,6 @@ export function baseItems(loggedIn: boolean, isAdmin: boolean): PaletteItem[] {
   const items: PaletteItem[] = [
     { id: "dashboard", label: "My lessons", hint: "Dashboard", group: "Go to", href: "/dashboard", keywords: "dashboard courses videos" },
     { id: "classes", label: "Live classes", hint: "Schedule and reminders", group: "Go to", href: "/classes" },
-    { id: "tools", label: "Market tools", hint: "Calendar, sessions, risk calculator", group: "Go to", href: "/tools", keywords: "calendar calculator" },
     { id: "contact", label: "Contact Us", hint: "Send us a message", group: "Go to", href: "/contact", keywords: "help support whatsapp email" },
     { id: "profile", label: "Profile", hint: "Photo, details, certificates, referrals", group: "Go to", href: "/profile", keywords: "photo picture avatar certificate referral devices" },
   ];

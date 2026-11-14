@@ -14,7 +14,6 @@ import Sidebar from "@/components/Sidebar";
 import RealtimeRefresh from "@/components/RealtimeRefresh";
 import ProgressVideo from "@/components/ProgressVideo";
 import YouTubeProgress from "@/components/YouTubeProgress";
-import LiveChart from "@/components/LiveChart";
 import { youTubeIdFromStored } from "@/lib/youtube";
 import Announcements from "@/components/Announcements";
 import LessonComments from "@/components/LessonComments";
@@ -25,8 +24,7 @@ import type { QuizStatus } from "@/components/Sidebar";
 import type { ClassRow } from "@/lib/classes";
 
 const RESOURCES = [
-  { name: "TradingView", tag: "Charts", url: "https://www.tradingview.com" },
-  { name: "Forex Factory", tag: "News", url: "https://www.forexfactory.com" },
+  { name: "TED Talks", tag: "Talks", url: "https://www.ted.com/talks" },
 ];
 
 const VideoBox = ({ children }: { children?: React.ReactNode }) => (
@@ -301,7 +299,7 @@ export default async function DashboardPage({
             <div className="rounded-card border border-line bg-surface p-6 md:col-span-2">
               <h3 className="text-xs font-extrabold tracking-widest uppercase">Lesson notes</h3>
               <p className="mt-4 text-sm leading-relaxed whitespace-pre-wrap text-white/70">
-                {content?.notes ?? "Welcome, Trader. Open the menu to select your lesson."}
+                {content?.notes ?? "Welcome. Open the menu to select your lesson."}
               </p>
             </div>
             <div className="rounded-card border border-line bg-surface p-6">
@@ -319,8 +317,6 @@ export default async function DashboardPage({
               </ul>
             </div>
           </div>
-
-          {cleared && <LiveChart />}
 
           {cleared && lesson && lessonUnlocked && (
             <LessonComments

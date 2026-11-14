@@ -212,7 +212,7 @@ export default function QuizManager({
                     aria-label={`Choice ${i + 1} is correct`}
                     checked={form.correct === i}
                     onChange={() => setForm((f) => ({ ...f, correct: i }))}
-                    className="accent-[#1fd8a0]"
+                    className="accent-[#6c579e]"
                   />
                   <input
                     className={inputCls}

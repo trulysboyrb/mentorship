@@ -9,10 +9,6 @@ export const STEPS: { title: string; text: string }[] = [
 
 export const FAQ: { q: string; a: string }[] = [
   {
-    q: "Do I need any trading experience?",
-    a: "No. The course starts from the very first step: setting up your platform and a demo account.",
-  },
-  {
     q: "How do I pay?",
     a: "After you sign up you can pay online with Wave, card or crypto, and your courses unlock automatically once the payment is verified. You can also pay on WhatsApp and we confirm it by hand. It is a one-time payment.",
   },
@@ -27,10 +23,6 @@ export const FAQ: { q: string; a: string }[] = [
   {
     q: "Is there a discount?",
     a: "Yes. If a friend who is already a student gives you their referral code, you get 5% off.",
-  },
-  {
-    q: "Is this financial advice?",
-    a: "No. Everything here is for education only. Trading carries a high risk and you can lose money. Read our Terms and Risk Disclaimer before you join.",
   },
   {
     q: "Will I get a certificate?",

@@ -108,7 +108,7 @@ export default function ResourceManager({
         </p>
         <div>
           <label className={labelCls} htmlFor="r_title">Title</label>
-          <input id="r_title" maxLength={120} className={inputCls} placeholder="e.g. Candlestick cheat sheet"
+          <input id="r_title" maxLength={120} className={inputCls} placeholder="e.g. Speech outline template"
             value={title} onChange={(e) => setTitle(e.target.value)} />
         </div>
         <div>

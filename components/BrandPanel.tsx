@@ -1,9 +1,7 @@
-import HeroChart from "@/components/HeroChart";
-
 const POINTS = [
   "Short video lessons, module by module",
   "Quizzes that unlock the next module",
-  "Live classes and a practice chart built in",
+  "Live classes built in",
   "A certificate when you finish",
 ];
 
@@ -14,11 +12,11 @@ export default function BrandPanel() {
       <div className="grid-bg pointer-events-none absolute inset-0 opacity-60" />
       <div className="anim-glow pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full bg-accent/20 blur-3xl" />
 
-      <p className="relative text-sm font-black tracking-tight text-accent">APEXTRADE ACADEMY</p>
+      <p className="relative text-sm font-black tracking-tight text-accent">FORBES ACADEMY</p>
 
       <div className="relative">
         <h2 className="anim-fade-up text-4xl leading-tight font-black tracking-tight xl:text-5xl">
-          Learn to trade
+          Learn Public speaking
           <br />
           <span className="text-muted">one clear step at a time.</span>
         </h2>
@@ -32,14 +30,9 @@ export default function BrandPanel() {
             </li>
           ))}
         </ul>
-        <div className="anim-float mt-10">
-          <HeroChart className="h-44 w-full" />
-        </div>
       </div>
 
-      <p className="relative text-[11px] leading-relaxed text-muted">
-        Education only, not financial advice. Trading carries a high risk of loss.
-      </p>
+      <span />
     </aside>
   );
 }

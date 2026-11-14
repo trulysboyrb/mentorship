@@ -16,7 +16,7 @@ import {
 
 // Validated chart colours (pass contrast checks on the dark background).
 const BLUE = "#5a8ee6";
-const GREEN = "#10a97a";
+const GREEN = "#6c579e";
 
 function Breakdown({ title, items }: { title: string; items: { k: string; n: number }[] }) {
   const total = items.reduce((a, b) => a + b.n, 0);

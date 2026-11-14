@@ -112,7 +112,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
         </fieldset>
 
         <div>
-          <label className={labelCls} htmlFor="experience">Trading experience</label>
+          <label className={labelCls} htmlFor="experience">Experience</label>
           <select id="experience" className={inputCls} value={form.experience}
             onChange={(e) => set("experience", e.target.value)}>
             <option value="beginner">Beginner</option>

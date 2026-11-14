@@ -13,7 +13,7 @@ import { getSiteStatus } from "@/lib/siteStatus";
 import { pricingOf } from "@/lib/siteSettings";
 
 const BLUE = "#5a8ee6";
-const GREEN = "#10a97a";
+const GREEN = "#6c579e";
 
 function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (

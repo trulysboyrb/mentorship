@@ -18,7 +18,7 @@ export type StartInput = {
 
 export type StartResult = { ok: true; url: string; ref: string | null } | { ok: false; error: string };
 
-const TITLE = "ApexTrade Academy course";
+const TITLE = "Forbes Academy course";
 
 // Asks the payment company for a checkout page and returns its address.
 export async function startCheckout(i: StartInput): Promise<StartResult> {

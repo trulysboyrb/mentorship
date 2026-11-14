@@ -2,7 +2,7 @@
 // when the phone is offline. It does NOT cache lessons, videos or any logged-in page, so
 // the paywall and live data are never bypassed.
 const OFFLINE_URL = "/offline.html";
-const CACHE = "apex-offline-v1";
+const CACHE = "forbes-offline-v1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.add(OFFLINE_URL)));

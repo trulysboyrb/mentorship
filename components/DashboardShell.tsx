@@ -15,7 +15,7 @@ export default function DashboardShell({
   return (
     <div className="min-h-screen lg:flex">
       <div className="flex items-center justify-between border-b border-line px-4 py-3 lg:hidden">
-        <span className="font-black text-accent">APEXTRADE ACADEMY</span>
+        <span className="font-black text-accent">FORBES ACADEMY</span>
         <button
           onClick={() => setOpen(!open)}
           className="rounded-control border border-line px-3 py-1.5 text-xs font-semibold tracking-wider uppercase"

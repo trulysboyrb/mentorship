@@ -60,7 +60,7 @@ export default async function PayReturnPage({ searchParams }: { searchParams: Pr
           <div className="flex justify-center">
             <span
               className="h-10 w-10 animate-spin rounded-full border-4 border-line"
-              style={{ borderTopColor: info?.bg ?? "#1fd8a0" }}
+              style={{ borderTopColor: info?.bg ?? "#6c579e" }}
             />
           </div>
           <p className="mt-5 text-center text-sm text-muted">
@@ -97,7 +97,7 @@ export default async function PayReturnPage({ searchParams }: { searchParams: Pr
 
       {pay && (waitedMs > 5 * 60 * 1000 || failed || pay.status === "underpaid") && (
         <a
-          href={whatsappHelpLink(`Hi, I paid on ApexTrade Academy but my account is not cleared yet. Payment reference: ${ref}`, site.contact_whatsapp)}
+          href={whatsappHelpLink(`Hi, I paid on Forbes Academy but my account is not cleared yet. Payment reference: ${ref}`, site.contact_whatsapp)}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-5 block rounded-control px-6 py-3.5 text-center text-xs font-extrabold tracking-wider uppercase"

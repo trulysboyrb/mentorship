@@ -1,6 +1,6 @@
 // A short burst of confetti on a full-screen canvas. Browser only. Skipped when the
 // device asks for reduced motion.
-const COLORS = ["#1fd8a0", "#f5c542", "#ffffff", "#5a8ee6", "#ff5c5c"];
+const COLORS = ["#6c579e", "#f5c542", "#ffffff", "#5a8ee6", "#ff5c5c"];
 
 export function fireConfetti(count = 140, ms = 2600): void {
   if (typeof window === "undefined") return;

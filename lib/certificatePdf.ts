@@ -54,7 +54,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
 
   const ink = rgb(0.04, 0.04, 0.05);
   const grey = rgb(0.42, 0.44, 0.48);
-  const green = rgb(0.06, 0.62, 0.45);
+  const green = rgb(0.424, 0.341, 0.62);
 
   // Sharp double border
   page.drawRectangle({ x: 22, y: 22, width: W - 44, height: H - 44, borderColor: green, borderWidth: 3 });
@@ -95,7 +95,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
   });
 
   center("has successfully completed all lessons of the", H - 350, regular, 14, grey);
-  center(`${course} trading course`, H - 376, bold, 18);
+  center(`${course} public speaking course`, H - 376, bold, 18);
 
   // Date (left) and signature (right)
   page.drawLine({ start: { x: 90, y: 118 }, end: { x: 270, y: 118 }, thickness: 0.6, color: ink });
@@ -106,7 +106,7 @@ export async function buildCertificatePdf(input: CertificateInput): Promise<Uint
   page.drawText("AUTHORISED SIGNATURE", { x: W - 270, y: 102, font: regular, size: 8, color: grey });
 
   center(`Certificate No. ${input.serial}`, 70, regular, 9, grey);
-  center("For education only. This certificate is not financial advice or a licence to trade.", 54, regular, 7.5, grey);
+  center("This certificate confirms completion of the course. It is not an accredited qualification.", 54, regular, 7.5, grey);
 
   return doc.save();
 }

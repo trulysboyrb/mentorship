@@ -81,7 +81,7 @@ export default function SiteMessagesForm({ status }: { status: SiteStatus }) {
             <label className={labelCls} htmlFor="b-tone">Colour</label>
             <select id="b-tone" className={inputCls} value={bTone} onChange={(e) => setBTone(e.target.value as BannerTone)}>
               <option value="info">Neutral</option>
-              <option value="success">Green</option>
+              <option value="success">Purple</option>
               <option value="warning">Red (important)</option>
             </select>
           </div>

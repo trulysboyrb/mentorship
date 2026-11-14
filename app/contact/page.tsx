@@ -24,7 +24,7 @@ export default async function ContactPage() {
   return (
     <main className="mx-auto max-w-2xl px-6 py-12">
       <Link href="/" className="text-sm font-black tracking-tight text-accent">
-        APEXTRADE ACADEMY
+        FORBES ACADEMY
       </Link>
       <h1 className="mt-10 text-4xl font-black tracking-tight">Contact Us</h1>
       <p className="mt-2 text-sm text-muted">{site.contact_business}</p>

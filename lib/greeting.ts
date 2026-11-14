@@ -10,7 +10,7 @@ export function greetingFor(date: Date): string {
 
 export function firstNameOf(fullName: string | null | undefined): string {
   const first = (fullName ?? "").trim().split(/\s+/)[0];
-  return first || "Trader";
+  return first || "Student";
 }
 
 export function initialOf(fullName: string | null | undefined): string {

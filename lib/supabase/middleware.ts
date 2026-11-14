@@ -6,7 +6,7 @@ import {
   isValidDeviceToken,
 } from "@/lib/deviceCookie";
 
-const PROTECTED = ["/dashboard", "/admin", "/pending", "/profile", "/tools", "/device-limit", "/pay"];
+const PROTECTED = ["/dashboard", "/admin", "/pending", "/profile", "/device-limit", "/pay"];
 const AUTH_PAGES = ["/login", "/signup"];
 
 export async function updateSession(request: NextRequest) {

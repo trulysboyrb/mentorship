@@ -55,7 +55,7 @@ export default function Sidebar({
   return (
     <div className="flex min-h-full flex-col p-5">
       <h1 className="mb-6 text-xl font-black tracking-tight text-accent">
-        APEXTRADE ACADEMY
+        FORBES ACADEMY
       </h1>
 
       {cleared && (
@@ -66,13 +66,6 @@ export default function Sidebar({
           >
             Live classes
             <span className="text-[10px] font-normal text-muted">Schedule, reminders</span>
-          </Link>
-          <Link
-            href="/tools"
-            className="flex items-center justify-between rounded-control border border-line bg-surface-2 px-4 py-3 text-sm font-semibold hover:border-accent"
-          >
-            Market tools
-            <span className="text-[10px] font-normal text-muted">Calendar, sessions</span>
           </Link>
         </div>
       )}

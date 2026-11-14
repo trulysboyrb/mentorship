@@ -2,9 +2,6 @@ import Link from "next/link";
 import LegalLinks from "@/components/LegalLinks";
 import ThemeToggle from "@/components/ThemeToggle";
 import Reveal from "@/components/Reveal";
-import RotatingWord from "@/components/RotatingWord";
-import HeroChart from "@/components/HeroChart";
-import Ticker from "@/components/Ticker";
 import { FAQ, STEPS, TESTIMONIALS } from "@/lib/landing";
 import { getSiteStatus } from "@/lib/siteStatus";
 import { getMoneyCtx } from "@/lib/money";
@@ -24,7 +21,6 @@ const FEATURES = [
   { icon: "▶", name: "Video lessons", text: "Short lessons in a clear order, with notes and downloads for each one." },
   { icon: "✓", name: "Module quizzes", text: "Pass the quiz to unlock the next module, so you really learn it." },
   { icon: "●", name: "Live classes", text: "A schedule with reminders, so you never miss a session." },
-  { icon: "↗", name: "Practice chart", text: "A live chart under every lesson, so you can see examples as you learn." },
   { icon: "★", name: "Certificate", text: "Finish the course and get a certificate with your name on it." },
   { icon: "▢", name: "Works on your phone", text: "Install it like an app and learn anywhere on your phone or laptop." },
 ];
@@ -36,7 +32,7 @@ export default async function LandingPage() {
     {
       name: "Online",
       price: site.price_online,
-      points: ["The full course on your phone or laptop", "Quizzes, certificate and live classes", "Market tools and downloadable notes"],
+      points: ["The full course on your phone or laptop", "Quizzes, certificate and live classes", "Downloadable notes for every lesson"],
     },
     {
       name: "In Person",
@@ -48,12 +44,12 @@ export default async function LandingPage() {
   return (
     <div className="relative overflow-x-clip">
       <noscript>
-        <style>{`.reveal,.anim-fade-up,.anim-fade-in,.candle{opacity:1!important;transform:none!important}.chart-line{stroke-dashoffset:0!important}`}</style>
+        <style>{`.reveal,.anim-fade-up,.anim-fade-in{opacity:1!important;transform:none!important}`}</style>
       </noscript>
 
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/70 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-sm font-black tracking-tight text-accent">APEXTRADE ACADEMY</span>
+          <span className="text-sm font-black tracking-tight text-accent">FORBES ACADEMY</span>
           <nav className="flex items-center gap-5">
             <a href="#prices" className="hidden text-xs font-semibold tracking-wider text-muted uppercase hover:text-white sm:block">
               Prices
@@ -78,38 +74,20 @@ export default async function LandingPage() {
           <div className="grid-bg pointer-events-none absolute inset-0" />
           <div className="anim-glow pointer-events-none absolute top-10 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-accent/20 blur-3xl" />
           <div className="relative mx-auto flex max-w-5xl flex-col items-center px-6 pt-16 pb-16 text-center sm:pt-24">
-            <p className="anim-fade-up border border-line bg-surface/70 px-4 py-1.5 text-[10px] font-extrabold tracking-widest text-muted uppercase">
-              Trading and blockchain education
-            </p>
-            <h1 className="anim-fade-up mt-6 text-5xl leading-[1.02] font-black tracking-tight sm:text-7xl" style={{ "--d": "0.1s" } as React.CSSProperties}>
-              Learn to trade
+            <h1 className="anim-fade-up text-5xl leading-[1.02] font-black tracking-tight sm:text-7xl" style={{ "--d": "0.1s" } as React.CSSProperties}>
+              Learn
               <br />
-              <RotatingWord words={["Forex", "Crypto", "the Markets"]} />
+              <span className="text-accent">Public speaking</span>
             </h1>
             <p className="anim-fade-up mt-6 max-w-md text-muted" style={{ "--d": "0.2s" } as React.CSSProperties}>
-              Modern trading and blockchain skills, structured into clear modules you can follow at your own pace.
+              Speak with confidence in front of any audience. Learn how to shape your message, calm your nerves and deliver it clearly, in short modules you can follow at your own pace.
             </p>
             <div className="anim-fade-up mt-10 flex flex-col gap-4 sm:flex-row" style={{ "--d": "0.3s" } as React.CSSProperties}>
               <Link href="/signup" className={primary}>Sign up</Link>
               <Link href="/login" className={secondary}>Login</Link>
             </div>
-
-            <div className="anim-fade-in mt-14 w-full max-w-2xl" style={{ "--d": "0.5s" } as React.CSSProperties}>
-              <div className="anim-float border border-line bg-surface/80 p-5 shadow-2xl backdrop-blur">
-                <div className="mb-3 flex items-center justify-between text-[10px] font-bold tracking-widest text-muted uppercase">
-                  <span className="flex items-center gap-2">
-                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                    Practice chart
-                  </span>
-                  <span>Illustration</span>
-                </div>
-                <HeroChart className="h-44 w-full sm:h-56" />
-              </div>
-            </div>
           </div>
         </section>
-
-        <Ticker />
 
         {/* Features */}
         <section className="mx-auto max-w-5xl px-6 py-20">
@@ -238,7 +216,7 @@ export default async function LandingPage() {
           <Reveal className="relative mx-auto flex max-w-5xl flex-col items-center px-6 py-24 text-center">
             <h2 className="text-4xl font-black tracking-tight">Ready to start?</h2>
             <p className="mt-3 max-w-md text-sm text-muted">
-              Create your account in a minute. Trading carries risk, and everything here is for education only.
+              Create your account in a minute and start learning today.
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link href="/signup" className={primary}>Sign up</Link>

@@ -321,7 +321,7 @@ export default function SignupPage() {
         </fieldset>
 
         <div>
-          <label className={labelCls} htmlFor="experience">Trading experience</label>
+          <label className={labelCls} htmlFor="experience">Experience</label>
           <select id="experience" className={inputCls} value={form.experience}
             onChange={(e) => set("experience", e.target.value)}>
             <option value="beginner">Beginner</option>
@@ -368,7 +368,7 @@ export default function SignupPage() {
         <label className="flex items-start gap-3 text-xs text-muted">
           <input type="checkbox" checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 accent-[#1fd8a0]" />
+            className="mt-0.5 accent-[#6c579e]" />
           <span>
             I accept the{" "}
             <Link href="/terms" target="_blank" className="text-accent hover:underline">
@@ -382,7 +382,7 @@ export default function SignupPage() {
             <Link href="/refund" target="_blank" className="text-accent hover:underline">
               refund policy
             </Link>
-            . I understand trading involves risk of loss and I am 18 or older.
+            . I am 18 or older.
           </span>
         </label>
 

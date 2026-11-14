@@ -104,11 +104,6 @@ export default function TopBar({
                 Live classes
               </Link>
             )}
-            {showTools && (
-              <Link role="menuitem" href="/tools" onClick={close} className={itemCls}>
-                Market tools
-              </Link>
-            )}
             {isAdmin && (
               <Link role="menuitem" href="/admin" onClick={close} className={itemCls}>
                 Admin area

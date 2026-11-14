@@ -126,7 +126,7 @@ export default function QuizRunner({
                     checked={answers[q.id] === idx}
                     disabled={!!result}
                     onChange={() => setAnswers((a) => ({ ...a, [q.id]: idx }))}
-                    className="accent-[#1fd8a0]"
+                    className="accent-[#6c579e]"
                   />
                   {o}
                 </label>

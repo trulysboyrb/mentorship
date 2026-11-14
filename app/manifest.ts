@@ -2,9 +2,9 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ApexTrade Academy",
-    short_name: "ApexTrade",
-    description: "Learn forex and crypto trading, step by step.",
+    name: "Forbes Academy",
+    short_name: "Forbes",
+    description: "Learn public speaking, step by step.",
     start_url: "/dashboard",
     scope: "/",
     display: "standalone",

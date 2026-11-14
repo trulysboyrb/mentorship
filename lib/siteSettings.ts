@@ -41,7 +41,7 @@ export const DEFAULT_STATUS: SiteStatus = {
   banner_tone: "info",
   contact_whatsapp: "",
   contact_email: "",
-  contact_business: "ApexTrade Academy",
+  contact_business: "Forbes Academy",
   contact_hours: "",
   local_prices_on: true,
   gmd_per_usd: null,
@@ -94,7 +94,7 @@ export function pricingOf(s: SiteStatus): Pricing {
 
 // Pages students must not use while maintenance mode is on. Login, signup, legal pages and the
 // admin area are never blurred, so you can always get in to switch it off.
-const STUDENT_PREFIXES = ["/dashboard", "/classes", "/tools", "/quiz", "/profile", "/pay", "/pending", "/device-limit"];
+const STUDENT_PREFIXES = ["/dashboard", "/classes", "/quiz", "/profile", "/pay", "/pending", "/device-limit"];
 
 export function isStudentArea(pathname: string): boolean {
   return STUDENT_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));

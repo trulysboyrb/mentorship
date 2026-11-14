@@ -1,4 +1,4 @@
-import { priceFor, type Pricing } from "./pricing";
+import { isInPerson, priceFor, type Pricing } from "./pricing";
 
 export type Totals = {
   students: number;
@@ -82,7 +82,7 @@ export function estimateRevenue(
   let inPerson = 0;
   for (const s of paidStudents) {
     const { final } = priceFor(s.learning_mode, s.referral_discount, pricing);
-    if (s.learning_mode === "in_person") inPerson += final;
+    if (isInPerson(s.learning_mode)) inPerson += final;
     else online += final;
   }
   return { total: online + inPerson, online, inPerson, count: paidStudents.length };
@@ -98,6 +98,7 @@ const LABELS: Record<string, string> = {
   unknown: "Not said",
   online: "Online",
   in_person: "In person",
+  group: "In person (group)",
   beginner: "Beginner",
   intermediate: "Intermediate",
   experienced: "Experienced",

@@ -33,10 +33,11 @@ export default async function AdminPage({
     { data: certRows },
     { data: noteRows },
     { count: totalLessons },
+    { data: groupRows },
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, full_name, email, whatsapp, learning_mode, payment_status, created_at, referral_discount, referred_by, cleared_via, avatar_path")
+      .select("id, full_name, email, whatsapp, learning_mode, batch, group_size, payment_status, created_at, referral_discount, referred_by, cleared_via, avatar_path")
       .eq("role", "student")
       .order("created_at", { ascending: false }),
     supabase.rpc("admin_student_stats"),
@@ -49,7 +50,14 @@ export default async function AdminPage({
       .select("id, student_id, body, author_name, created_at")
       .order("created_at", { ascending: false }),
     supabase.from("lessons").select("id", { count: "exact", head: true }),
+    // The other people in each in-person group (empty if the Phase 22 SQL has not been run yet).
+    supabase.from("group_members").select("leader_id, full_name, whatsapp, position").order("position"),
   ]);
+
+  const groups: Record<string, { full_name: string; whatsapp: string }[]> = {};
+  (groupRows ?? []).forEach((g) => {
+    (groups[g.leader_id] ??= []).push({ full_name: g.full_name, whatsapp: g.whatsapp });
+  });
 
   // Certificate template from Settings (admin only). If the Phase 18 SQL has not been run, this is just empty.
   const { data: adminSettings } = await supabase.rpc("admin_get_settings");
@@ -96,6 +104,8 @@ export default async function AdminPage({
     email: s.email,
     whatsapp: s.whatsapp,
     learning_mode: s.learning_mode,
+    batch: s.batch ?? null,
+    group_size: s.group_size ?? null,
     payment_status: s.payment_status,
     cleared_via: s.cleared_via ?? null,
     created_at: s.created_at,
@@ -126,6 +136,7 @@ export default async function AdminPage({
         initialQuery={(q ?? "").slice(0, 80)}
         pricing={pricingOf(await getSiteStatus())}
         students={rows}
+        groups={groups}
         completed={completed}
         totalLessons={totalLessons ?? 0}
         finished={finished}

@@ -10,6 +10,7 @@ type Profile = {
   whatsapp: string | null;
   country: string | null;
   learning_mode: string | null;
+  payment_status?: string | null;
   experience: string | null;
 };
 
@@ -96,6 +97,12 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
 
         <fieldset>
           <legend className={labelCls}>How you learn</legend>
+          {profile.learning_mode === "group" || profile.payment_status === "cleared" ? (
+            <p className="rounded-control border border-line px-4 py-3 text-sm text-muted">
+              {profile.learning_mode === "group" ? "In person (group)" : profile.learning_mode === "in_person" ? "In person" : "Online"}
+              <span className="mt-1 block text-xs">This can not be changed after sign up. Contact us if you need a change.</span>
+            </p>
+          ) : (
           <div className="grid grid-cols-2 gap-3">
             {[["online", "Online"], ["in_person", "In person"]].map(([value, label]) => (
               <label key={value}
@@ -109,6 +116,7 @@ export default function ProfileForm({ profile }: { profile: Profile }) {
               </label>
             ))}
           </div>
+          )}
         </fieldset>
 
         <div>

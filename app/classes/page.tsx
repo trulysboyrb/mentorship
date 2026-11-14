@@ -17,12 +17,13 @@ export default async function ClassesPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role, payment_status, avatar_path")
+    .select("full_name, role, payment_status, avatar_path, learning_mode")
     .eq("id", user.id)
     .single();
   if (!profile) redirect("/dashboard");
 
   const isAdmin = profile.role === "admin";
+  if (!isAdmin && (profile.learning_mode === "in_person" || profile.learning_mode === "group")) redirect("/pending");
   if (profile.payment_status !== "cleared" && !isAdmin) redirect("/dashboard");
   if (!isAdmin && (await checkDevice(supabase)) === "limit") redirect("/device-limit");
 

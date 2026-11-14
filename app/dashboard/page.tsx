@@ -4,7 +4,7 @@ import { checkDevice } from "@/lib/device";
 import { whatsappLink } from "@/lib/whatsapp";
 import PayButtons from "@/components/PayButtons";
 import { getAvailability } from "@/lib/payments/available";
-import { priceFor } from "@/lib/pricing";
+import { priceFor, isInPerson } from "@/lib/pricing";
 import { getMoneyCtx } from "@/lib/money";
 import { priceText, waveAllowed } from "@/lib/currency";
 import { getSiteStatus } from "@/lib/siteStatus";
@@ -57,6 +57,8 @@ export default async function DashboardPage({
     .single();
 
   const isAdmin = profile?.role === "admin";
+  // In person students (single or group) have no video course: only payment, then the team adds them to WhatsApp.
+  if (!isAdmin && isInPerson(profile?.learning_mode)) redirect("/pending");
   const cleared = isAdmin || profile?.payment_status === "cleared";
 
   // Paid students can use up to the allowed number of devices. Admins are never limited.

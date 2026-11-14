@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { issueCertificate, type CertTemplate } from "@/lib/issueCertificate";
@@ -8,7 +8,7 @@ import CertificateModal, { type CertItem } from "@/components/CertificateModal";
 import StudentNotesModal, { type NoteItem } from "@/components/StudentNotesModal";
 import AdminDevicesModal from "@/components/AdminDevicesModal";
 import DeleteStudentModal from "@/components/DeleteStudentModal";
-import { formatGMD, priceFor, DEFAULT_PRICING, type Pricing } from "@/lib/pricing";
+import { formatGMD, priceFor, modeLabel, isInPerson, DEFAULT_PRICING, type Pricing } from "@/lib/pricing";
 import { clearedViaLabel, type ClearedVia } from "@/lib/paymentMethods";
 import OptionsMenu, { type MenuItem } from "@/components/OptionsMenu";
 import CountUp from "@/components/CountUp";
@@ -22,6 +22,8 @@ type Student = {
   email: string | null;
   whatsapp: string | null;
   learning_mode: string | null;
+  batch?: number | null;
+  group_size?: number | null;
   payment_status: string;
   cleared_via: string | null;
   created_at: string;
@@ -38,6 +40,7 @@ const actionBtn =
 
 export default function AdminStudents({
   students,
+  groups = {},
   completed,
   totalLessons,
   finished,
@@ -51,6 +54,7 @@ export default function AdminStudents({
   initialQuery?: string;
   pricing?: Pricing;
   students: Student[];
+  groups?: Record<string, { full_name: string; whatsapp: string }[]>;
   completed: Record<string, number>;
   totalLessons: number;
   finished: Record<string, boolean>;
@@ -67,14 +71,41 @@ export default function AdminStudents({
   const [notesFor, setNotesFor] = useState<string | null>(null);
   const [devicesFor, setDevicesFor] = useState<string | null>(null);
   const [deleteFor, setDeleteFor] = useState<string | null>(null);
+  const [typeFilter, setTypeFilter] = useState<"all" | "online" | "in_person" | "group">("all");
+  const [batchFilter, setBatchFilter] = useState<string>("all");
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [copied, setCopied] = useState<string | null>(null);
+  const batches = Array.from(new Set(students.map((s) => s.batch).filter((b): b is number => typeof b === "number"))).sort((a, b) => b - a);
+
+  function toggleGroup(id: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  // Everyone in a group as plain text (name and WhatsApp), ready to paste when you add them to the WhatsApp group.
+  async function copyGroup(s: Student) {
+    const lines = [`${s.full_name} ${s.whatsapp ?? ""}`.trim(), ...(groups[s.id] ?? []).map((m) => `${m.full_name} ${m.whatsapp}`)];
+    try {
+      await navigator.clipboard.writeText(lines.join("\n"));
+      setCopied(s.id);
+      setTimeout(() => setCopied((c) => (c === s.id ? null : c)), 1500);
+    } catch {
+      setError("Could not copy. Select the numbers and copy them by hand.");
+    }
+  }
 
   const needle = query.trim().toLowerCase();
   const shown = students
     .filter((s) => {
       if (needle) {
-        const hay = `${s.full_name} ${s.email ?? ""} ${s.whatsapp ?? ""}`.toLowerCase();
+        const hay = `${s.full_name} ${s.email ?? ""} ${s.whatsapp ?? ""} ${(groups[s.id] ?? []).map((m) => `${m.full_name} ${m.whatsapp}`).join(" ")}`.toLowerCase();
         if (!hay.includes(needle)) return false;
       }
+      if (typeFilter !== "all" && (s.learning_mode ?? "online") !== typeFilter) return false;
+      if (batchFilter !== "all" && String(s.batch ?? "") !== batchFilter) return false;
       if (filter === "all") return true;
       if (filter === "finished") return !!finished[s.id];
       return s.payment_status === filter;
@@ -88,12 +119,14 @@ export default function AdminStudents({
 
   function exportCsv() {
     const csv = toCsv(
-      ["Name", "Email", "WhatsApp", "Mode", "Status", "Paid via", "Lessons completed", "Signed up"],
+      ["Name", "Email", "WhatsApp", "Mode", "Batch", "Group members", "Status", "Paid via", "Lessons completed", "Signed up"],
       shown.map((s) => [
         s.full_name,
         s.email,
         s.whatsapp,
-        s.learning_mode === "in_person" ? "In person" : "Online",
+        modeLabel(s.learning_mode),
+        s.batch ?? "",
+        (groups[s.id] ?? []).map((m) => `${m.full_name} (${m.whatsapp})`).join("; "),
         s.payment_status,
         s.cleared_via,
         s.payment_status === "cleared" ? (completed[s.id] ?? 0) : "",
@@ -144,8 +177,8 @@ export default function AdminStudents({
   function menuFor(s: Student, cleared: boolean, certCount: number, noteCount: number): MenuItem[] {
     return [
       cleared
-        ? { key: "unclear", label: "Unclear (lock courses)", onClick: () => setStatus(s, "pending"), tone: "danger" }
-        : { key: "clear", label: "Clear (unlock courses)", onClick: () => setStatus(s, "cleared"), tone: "accent" },
+        ? { key: "unclear", label: isInPerson(s.learning_mode) ? "Unclear (mark unpaid)" : "Unclear (lock courses)", onClick: () => setStatus(s, "pending"), tone: "danger" }
+        : { key: "clear", label: isInPerson(s.learning_mode) ? "Clear (confirm payment)" : "Clear (unlock courses)", onClick: () => setStatus(s, "cleared"), tone: "accent" },
       { key: "cert", label: "Give certificate", badge: certCount, onClick: () => setCertFor(s.id), dividerBefore: true },
       { key: "notes", label: "Notes", badge: noteCount, onClick: () => setNotesFor(s.id) },
       { key: "devices", label: "Devices", onClick: () => setDevicesFor(s.id) },
@@ -195,10 +228,32 @@ export default function AdminStudents({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search name, email or WhatsApp"
+          placeholder="Search name, email, WhatsApp or group member"
           aria-label="Search students"
           className="min-w-0 flex-1 rounded-control border border-line bg-black px-4 py-2.5 text-sm text-white placeholder:text-muted/70 focus:border-accent focus:outline-none sm:max-w-xs"
         />
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value as typeof typeFilter)}
+          aria-label="Filter by type"
+          className="rounded-control border border-line bg-black px-3 py-2.5 text-sm text-white focus:border-accent focus:outline-none"
+        >
+          <option value="all">All types</option>
+          <option value="online">Online</option>
+          <option value="in_person">In person (single)</option>
+          <option value="group">In person (group)</option>
+        </select>
+        <select
+          value={batchFilter}
+          onChange={(e) => setBatchFilter(e.target.value)}
+          aria-label="Filter by batch"
+          className="rounded-control border border-line bg-black px-3 py-2.5 text-sm text-white focus:border-accent focus:outline-none"
+        >
+          <option value="all">All batches</option>
+          {batches.map((b) => (
+            <option key={b} value={String(b)}>Batch {b}</option>
+          ))}
+        </select>
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as Sort)}
@@ -229,6 +284,7 @@ export default function AdminStudents({
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">WhatsApp</th>
               <th className="px-4 py-3">Mode / price</th>
+              <th className="px-4 py-3">Batch</th>
               <th className="px-4 py-3">Status</th>
               <th className="px-4 py-3">Progress</th>
               <th className="px-4 py-3 text-right">Action</th>
@@ -241,7 +297,8 @@ export default function AdminStudents({
               const noteCount = notes[s.id]?.length ?? 0;
               const canApprove = cleared && finished[s.id] && certCount === 0;
               return (
-                <tr key={s.id} className="anim-row border-b border-line transition-colors last:border-0 hover:bg-surface-2/60" style={{ "--d": `${Math.min(idx, 12) * 0.03}s` } as React.CSSProperties}>
+                <Fragment key={s.id}>
+                <tr className="anim-row border-b border-line transition-colors last:border-0 hover:bg-surface-2/60" style={{ "--d": `${Math.min(idx, 12) * 0.03}s` } as React.CSSProperties}>
                   <td className="px-4 py-3">
                     <span className="flex items-center gap-3">
                       <Avatar url={s.avatar_url} name={s.full_name} size={32} className="border border-line" />
@@ -258,7 +315,7 @@ export default function AdminStudents({
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted">
-                    {s.learning_mode === "in_person" ? "In person" : "Online"}
+                    {modeLabel(s.learning_mode)}
                     <span className="block text-xs">
                       {formatGMD(priceFor(s.learning_mode, s.referral_discount, pricing).final)}
                     </span>
@@ -267,7 +324,18 @@ export default function AdminStudents({
                         {pricing.referralPercent}% referral{s.referrer_name ? ` · ${s.referrer_name}` : ""}
                       </span>
                     )}
+                    {s.learning_mode === "group" && (
+                      <button
+                        type="button"
+                        onClick={() => toggleGroup(s.id)}
+                        aria-expanded={openGroups.has(s.id)}
+                        className="mt-1.5 rounded-control border border-line px-2.5 py-1 text-[10px] font-extrabold tracking-widest text-white uppercase hover:border-accent"
+                      >
+                        Group of {s.group_size ?? (groups[s.id]?.length ?? 0) + 1} {openGroups.has(s.id) ? "▴" : "▾"}
+                      </button>
+                    )}
                   </td>
+                  <td className="px-4 py-3 text-muted">{s.batch ? `Batch ${s.batch}` : "-"}</td>
                   <td className={`px-4 py-3 ${cleared ? "text-accent" : "text-danger"}`}>
                     {cleared ? "Cleared" : "Pending"}
                     {cleared && s.cleared_via && (
@@ -277,7 +345,7 @@ export default function AdminStudents({
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted">
-                    {cleared ? `${completed[s.id] ?? 0} / ${totalLessons}` : "-"}
+                    {cleared && !isInPerson(s.learning_mode) ? `${completed[s.id] ?? 0} / ${totalLessons}` : "-"}
                     {finished[s.id] && (
                       <span className="ml-2 text-[10px] font-extrabold tracking-widest text-accent uppercase">
                         Finished
@@ -299,11 +367,45 @@ export default function AdminStudents({
                     </div>
                   </td>
                 </tr>
+                {s.learning_mode === "group" && openGroups.has(s.id) && (
+                  <tr className="border-b border-line bg-surface-2/40 last:border-0">
+                    <td colSpan={8} className="px-4 py-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="text-[10px] font-extrabold tracking-widest text-muted uppercase">
+                          Group of {s.group_size ?? (groups[s.id]?.length ?? 0) + 1} &middot; {s.batch ? `Batch ${s.batch}` : "no batch"} &middot;{" "}
+                          {cleared ? "paid" : "not paid yet"}
+                        </p>
+                        <button type="button" onClick={() => copyGroup(s)}
+                          className="rounded-control border border-line px-3 py-1.5 text-[10px] font-extrabold tracking-widest uppercase hover:border-accent">
+                          {copied === s.id ? "Copied" : "Copy names and numbers"}
+                        </button>
+                      </div>
+                      <ol className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                        {[{ full_name: s.full_name, whatsapp: s.whatsapp ?? "" , leader: true }, ...(groups[s.id] ?? []).map((m) => ({ ...m, leader: false }))].map((m, i) => (
+                          <li key={`${m.whatsapp}-${i}`} className="flex items-center justify-between gap-3 rounded-control border border-line px-3 py-2">
+                            <span>
+                              {i + 1}. {m.full_name}
+                              {m.leader && <span className="ml-2 text-[10px] font-extrabold tracking-widest text-accent uppercase">Paying</span>}
+                            </span>
+                            {m.whatsapp ? (
+                              <a href={`https://wa.me/${m.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="text-muted hover:text-accent">
+                                {m.whatsapp}
+                              </a>
+                            ) : (
+                              <span className="text-muted">-</span>
+                            )}
+                          </li>
+                        ))}
+                      </ol>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               );
             })}
             {shown.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-muted">
+                <td colSpan={8} className="px-4 py-8 text-center text-muted">
                   {needle || filter !== "all" ? "No students match." : "No students here yet."}
                 </td>
               </tr>

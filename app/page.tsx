@@ -64,7 +64,12 @@ export default async function LandingPage() {
     {
       name: "In Person",
       price: site.price_in_person,
-      points: ["Everything in Online", "Classes with us face to face", "Hands-on help with your questions"],
+      points: ["Classes with us face to face", "Hands-on help with your questions", "We add you to your batch's WhatsApp group"],
+    },
+    {
+      name: "In Person (Group)",
+      price: site.price_group,
+      points: [`Bring up to ${site.group_max} people on one sign-up`, "One payment for the whole group", "Everyone joins the same batch WhatsApp group"],
     },
   ];
 
@@ -233,16 +238,16 @@ export default async function LandingPage() {
           <Reveal>
             <h2 className={heading}>Price</h2>
             <p className="mt-3 max-w-xl text-sm text-muted">
-              One payment, no subscription. Pay online with {waveAllowed(ctx.code) ? "Wave, card or crypto" : "card or crypto"}, or on WhatsApp. Your courses unlock as soon as the payment is confirmed.
+              One payment, no subscription. Pay online with {waveAllowed(ctx.code) ? "Wave, card or crypto" : "card or crypto"}, or on WhatsApp. Online courses unlock as soon as the payment is confirmed. In person students are added to their batch's WhatsApp group once we confirm it.
             </p>
           </Reveal>
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
             {plans.map((p, i) => (
               <Reveal key={p.name} delay={i * 0.1}>
                 <div className="lift flex h-full flex-col rounded-(--radius-card) border border-line bg-surface p-8">
                   <h3 className="text-xs font-extrabold tracking-widest uppercase">{p.name}</h3>
                   <p className="mt-4 text-4xl font-black">{priceText(p.price, ctx).text}</p>
-                  <p className="mt-1 text-xs text-muted">one-time payment</p>
+                  <p className="mt-1 text-xs text-muted">{p.name.includes("Group") ? `one-time payment for the whole group` : "one-time payment"}</p>
                   {chargeNote(p.price, ctx) && <p className="mt-1 text-[11px] text-muted">{chargeNote(p.price, ctx)}</p>}
                   <ul className="mt-6 flex-1 space-y-3 text-sm text-white/80">
                     {p.points.map((pt) => (

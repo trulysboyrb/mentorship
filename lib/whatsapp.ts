@@ -7,7 +7,7 @@ export function whatsappLink(
   mode: string | null,
   opts: { referred?: boolean; pricing?: Pricing; number?: string } = {}
 ) {
-  const how = mode === "in_person" ? "in person" : "online";
+  const how = mode === "group" ? "in person as a group" : mode === "in_person" ? "in person" : "online";
   const pricing = opts.pricing ?? DEFAULT_PRICING;
   const { final } = priceFor(mode, !!opts.referred, pricing);
   const discount = opts.referred

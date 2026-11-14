@@ -12,6 +12,7 @@ import { priceFor } from "@/lib/pricing";
 import { priceText, isCurrency, type CurrencyCode, type MoneyCtx } from "@/lib/currency";
 import { DEFAULT_STATUS, parseSiteStatus, pricingOf, type SiteStatus } from "@/lib/siteSettings";
 import { normalizeReferralCode } from "@/lib/referral";
+import { cleanMembers, memberError, type GroupMember } from "@/lib/groups";
 
 type CodeState = "idle" | "checking" | "valid" | "invalid";
 
@@ -28,6 +29,8 @@ export default function SignupPage() {
     heard_from: "",
     referral: "",
   });
+  // Everyone in the group besides the person signing up (who is person 1).
+  const [members, setMembers] = useState<GroupMember[]>([{ name: "", whatsapp: "" }]);
   const [step, setStep] = useState<1 | 2>(1);
   const [site, setSite] = useState<SiteStatus>(DEFAULT_STATUS);
   const [siteChecked, setSiteChecked] = useState(false);
@@ -134,6 +137,14 @@ export default function SignupPage() {
       return;
     }
 
+    if (form.learning_mode === "group") {
+      const problem = memberError(members, site.group_max, form.whatsapp);
+      if (problem) {
+        setError(problem);
+        return;
+      }
+    }
+
     setLoading(true);
 
     if (normalizeReferralCode(form.referral)) {
@@ -150,7 +161,11 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { ...meta, referral_code: normalizeReferralCode(referral) },
+        data: {
+          ...meta,
+          referral_code: normalizeReferralCode(referral),
+          ...(form.learning_mode === "group" ? { group_members: cleanMembers(members) } : {}),
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/confirmed`,
       },
     });
@@ -291,16 +306,15 @@ export default function SignupPage() {
           <div className="grid grid-cols-2 gap-3">
             {(["online", "in_person"] as const).map((value) => {
               const label = value === "online" ? "Online" : "In person";
+              const selected = value === "online" ? form.learning_mode === "online" : form.learning_mode !== "online";
               const { base, final } = priceFor(value, referred, pricingOf(site));
               return (
                 <label key={value}
                   className={`cursor-pointer rounded-control border px-4 py-3 text-center ${
-                    form.learning_mode === value
-                      ? "border-accent text-white"
-                      : "border-line text-muted"
+                    selected ? "border-accent text-white" : "border-line text-muted"
                   }`}>
                   <input type="radio" name="learning_mode" value={value} className="sr-only"
-                    checked={form.learning_mode === value}
+                    checked={selected}
                     onChange={() => set("learning_mode", value)} />
                   <span className="block text-sm">{label}</span>
                   <span className="mt-1 block text-[11px] text-muted/75">
@@ -318,7 +332,87 @@ export default function SignupPage() {
               );
             })}
           </div>
+          <p className="mt-2 text-[11px] text-muted">
+            {form.learning_mode === "online"
+              ? "Watch the lessons on your phone or laptop."
+              : "Classes with us face to face. After you pay, our team adds you to your batch's WhatsApp group."}
+          </p>
         </fieldset>
+
+        {form.learning_mode !== "online" && (
+          <fieldset className="anim-fade-up">
+            <legend className={labelCls}>Who is coming?</legend>
+            <div className="grid grid-cols-2 gap-3">
+              {(["in_person", "group"] as const).map((value) => {
+                const label = value === "group" ? "A group" : "Just me";
+                const { base, final } = priceFor(value, referred, pricingOf(site));
+                return (
+                  <label key={value}
+                    className={`cursor-pointer rounded-control border px-4 py-3 text-center ${
+                      form.learning_mode === value ? "border-accent text-white" : "border-line text-muted"
+                    }`}>
+                    <input type="radio" name="in_person_kind" value={value} className="sr-only"
+                      checked={form.learning_mode === value}
+                      onChange={() => set("learning_mode", value)} />
+                    <span className="block text-sm">{label}</span>
+                    <span className="mt-1 block text-[11px] text-muted/75">
+                      {!cur || !siteChecked ? (
+                        "\u00a0"
+                      ) : referred ? (
+                        <>
+                          <s>{priceText(base, money).text}</s> {priceText(final, money).text}
+                        </>
+                      ) : (
+                        priceText(base, money).text
+                      )}
+                      {value === "group" && cur && siteChecked ? ` for the whole group` : ""}
+                    </span>
+                  </label>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {form.learning_mode === "group" && (
+          <fieldset className="anim-fade-up rounded-control border border-line p-4">
+            <legend className="px-2 text-[10px] font-extrabold tracking-widest text-muted uppercase">
+              Your group ({members.length + 1} of {site.group_max})
+            </legend>
+            <p className="text-xs text-muted">
+              You are person 1 (the name and WhatsApp number from this sign up). One person pays once for everyone.
+              Add everyone else here, up to {site.group_max} people in total.
+            </p>
+            <div className="mt-4 space-y-4">
+              {members.map((m, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-extrabold tracking-widest text-muted uppercase">Person {i + 2}</span>
+                    {members.length > 1 && (
+                      <button type="button" aria-label={`Remove person ${i + 2}`}
+                        onClick={() => setMembers((l) => l.filter((_, k) => k !== i))}
+                        className="text-xs text-muted hover:text-danger">
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                  <input aria-label={`Person ${i + 2} full name`} className={inputCls} placeholder="full name"
+                    value={m.name}
+                    onChange={(e) => setMembers((l) => l.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} />
+                  <input aria-label={`Person ${i + 2} WhatsApp number`} type="tel" className={inputCls}
+                    placeholder="WhatsApp number with country code" value={m.whatsapp}
+                    onChange={(e) => setMembers((l) => l.map((x, k) => (k === i ? { ...x, whatsapp: e.target.value } : x)))} />
+                </div>
+              ))}
+            </div>
+            <button type="button"
+              disabled={members.length + 1 >= site.group_max}
+              onClick={() => setMembers((l) => [...l, { name: "", whatsapp: "" }])}
+              className="mt-4 rounded-control border border-line px-4 py-2.5 text-xs font-extrabold tracking-wider uppercase hover:border-accent disabled:opacity-50">
+              Add another person
+            </button>
+          </fieldset>
+        )}
 
         <div>
           <label className={labelCls} htmlFor="experience">Experience</label>

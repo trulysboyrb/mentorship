@@ -5,6 +5,9 @@ import { DEFAULT_PRICING, type Pricing } from "./pricing";
 export type SiteStatus = {
   price_online: number;
   price_in_person: number;
+  price_group: number; // flat price for a whole group
+  current_batch: number; // new in-person sign-ups are put in this batch
+  group_max: number; // most people allowed in one group
   referral_percent: number;
   pay_wave: boolean;
   pay_card: boolean;
@@ -29,6 +32,9 @@ export type BannerTone = "info" | "success" | "warning";
 export const DEFAULT_STATUS: SiteStatus = {
   price_online: DEFAULT_PRICING.online,
   price_in_person: DEFAULT_PRICING.in_person,
+  price_group: DEFAULT_PRICING.group,
+  current_batch: 1,
+  group_max: 10,
   referral_percent: DEFAULT_PRICING.referralPercent,
   pay_wave: true,
   pay_card: true,
@@ -68,6 +74,9 @@ export function parseSiteStatus(raw: unknown): SiteStatus {
   return {
     price_online: int(r.price_online, 1, 1_000_000, d.price_online),
     price_in_person: int(r.price_in_person, 1, 1_000_000, d.price_in_person),
+    price_group: int(r.price_group, 1, 1_000_000, d.price_group),
+    current_batch: int(r.current_batch, 1, 9999, d.current_batch),
+    group_max: int(r.group_max, 2, 50, d.group_max),
     referral_percent: int(r.referral_percent, 0, 50, d.referral_percent),
     pay_wave: bool(r.pay_wave, d.pay_wave),
     pay_card: bool(r.pay_card, d.pay_card),
@@ -89,7 +98,7 @@ export function parseSiteStatus(raw: unknown): SiteStatus {
 }
 
 export function pricingOf(s: SiteStatus): Pricing {
-  return { online: s.price_online, in_person: s.price_in_person, referralPercent: s.referral_percent };
+  return { online: s.price_online, in_person: s.price_in_person, group: s.price_group, referralPercent: s.referral_percent };
 }
 
 // Pages students must not use while maintenance mode is on. Login, signup, legal pages and the

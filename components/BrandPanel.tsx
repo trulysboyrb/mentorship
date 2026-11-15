@@ -20,7 +20,7 @@ export default function BrandPanel() {
 
       <div className="relative">
         <h2 className="anim-fade-up text-4xl leading-tight font-black tracking-tight xl:text-5xl">
-          Learn Public speaking
+          Learn Public Speaking
           <br />
           <span className="text-muted">one clear step at a time.</span>
         </h2>

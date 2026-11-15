@@ -115,7 +115,7 @@ export default async function LandingPage() {
             <h1 className="anim-fade-up text-5xl leading-[1.02] font-black tracking-tight sm:text-7xl" style={{ "--d": "0.1s" } as React.CSSProperties}>
               Learn
               <br />
-              <span className="text-accent">Public speaking</span>
+              <span className="text-accent">Public Speaking</span>
             </h1>
             <p className="anim-fade-up mt-6 max-w-md text-muted" style={{ "--d": "0.2s" } as React.CSSProperties}>
               Speak with confidence in front of any audience. Learn how to shape your message, calm your nerves and deliver it clearly, in short modules you can follow at your own pace.

@@ -7,11 +7,13 @@ import { createClient } from "@/lib/supabase/client";
 import AuthCard from "@/components/AuthCard";
 import { inputCls, labelCls, primaryBtn } from "@/components/ui";
 import PasswordInput from "@/components/PasswordInput";
+import { rememberChoice } from "@/lib/keepSignedIn";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [keep, setKeep] = useState(true);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -36,6 +38,9 @@ export default function LoginPage() {
       return;
     }
 
+    // Ticked: the login lasts. Unticked: it ends when the browser is closed (see SessionGuard).
+    rememberChoice(keep);
+
     // Admins go to the admin area, students to their dashboard.
     const { data: profile } = await supabase
       .from("profiles")
@@ -57,7 +62,7 @@ export default function LoginPage() {
             type="email"
             required
             autoComplete="email"
-            placeholder="enter email"
+            placeholder="you@example.com"
             className={inputCls}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -69,13 +74,17 @@ export default function LoginPage() {
             id="password"
             required
             autoComplete="current-password"
-            placeholder="enter password"
+            placeholder="Your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
-        <div className="text-right">
+        <div className="flex items-center justify-between gap-4">
+          <label className="flex cursor-pointer items-center gap-2 text-xs text-muted">
+            <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} className="h-4 w-4 accent-[#6c579e]" />
+            Keep me signed in
+          </label>
           <Link href="/forgot-password" className="text-xs text-muted hover:text-accent">
             Forgot password?
           </Link>

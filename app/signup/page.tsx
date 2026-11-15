@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -13,6 +13,8 @@ import { priceText, isCurrency, type CurrencyCode, type MoneyCtx } from "@/lib/c
 import { DEFAULT_STATUS, parseSiteStatus, pricingOf, type SiteStatus } from "@/lib/siteSettings";
 import { normalizeReferralCode } from "@/lib/referral";
 import { cleanMembers, memberError, type GroupMember } from "@/lib/groups";
+import PhoneInput from "@/components/PhoneInput";
+import { clearChoice } from "@/lib/keepSignedIn";
 
 type CodeState = "idle" | "checking" | "valid" | "invalid";
 
@@ -30,7 +32,8 @@ export default function SignupPage() {
     referral: "",
   });
   // Everyone in the group besides the person signing up (who is person 1).
-  const [members, setMembers] = useState<GroupMember[]>([{ name: "", whatsapp: "" }]);
+  const [members, setMembers] = useState<(GroupMember & { k: number })[]>([{ name: "", whatsapp: "", k: 0 }]);
+  const nextKey = useRef(1);
   const [step, setStep] = useState<1 | 2>(1);
   const [site, setSite] = useState<SiteStatus>(DEFAULT_STATUS);
   const [siteChecked, setSiteChecked] = useState(false);
@@ -137,6 +140,11 @@ export default function SignupPage() {
       return;
     }
 
+    if (form.whatsapp.replace(/\D/g, "").length < 8) {
+      setError("Please enter your WhatsApp number.");
+      return;
+    }
+
     if (form.learning_mode === "group") {
       const problem = memberError(members, site.group_max, form.whatsapp);
       if (problem) {
@@ -192,6 +200,7 @@ export default function SignupPage() {
     }
 
     if (data.session) {
+      clearChoice(); // a new account stays signed in
       router.push("/pending");
       router.refresh();
     } else {
@@ -291,9 +300,8 @@ export default function SignupPage() {
       <form onSubmit={onSubmit} className="space-y-5" key="step2">
         <div className="anim-fade-up">
           <label className={labelCls} htmlFor="whatsapp">WhatsApp number</label>
-          <input id="whatsapp" type="tel" required className={inputCls}
-            placeholder="include country code, e.g. 220..." value={form.whatsapp}
-            onChange={(e) => set("whatsapp", e.target.value)} />
+          <PhoneInput id="whatsapp" label="Your WhatsApp number" required initial={form.whatsapp}
+            onChange={(v) => set("whatsapp", v)} onCountry={(name) => set("country", name)} />
         </div>
         <div className="anim-fade-up" style={{ "--d": "0.06s" } as React.CSSProperties}>
           <label className={labelCls} htmlFor="country">Country</label>
@@ -385,7 +393,7 @@ export default function SignupPage() {
             </p>
             <div className="mt-4 space-y-4">
               {members.map((m, i) => (
-                <div key={i} className="space-y-2">
+                <div key={m.k} className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] font-extrabold tracking-widest text-muted uppercase">Person {i + 2}</span>
                     {members.length > 1 && (
@@ -399,15 +407,14 @@ export default function SignupPage() {
                   <input aria-label={`Person ${i + 2} full name`} className={inputCls} placeholder="full name"
                     value={m.name}
                     onChange={(e) => setMembers((l) => l.map((x, k) => (k === i ? { ...x, name: e.target.value } : x)))} />
-                  <input aria-label={`Person ${i + 2} WhatsApp number`} type="tel" className={inputCls}
-                    placeholder="WhatsApp number with country code" value={m.whatsapp}
-                    onChange={(e) => setMembers((l) => l.map((x, k) => (k === i ? { ...x, whatsapp: e.target.value } : x)))} />
+                  <PhoneInput label={`Person ${i + 2} WhatsApp number`} initial={m.whatsapp}
+                    onChange={(v) => setMembers((l) => l.map((x, k) => (k === i ? { ...x, whatsapp: v } : x)))} />
                 </div>
               ))}
             </div>
             <button type="button"
               disabled={members.length + 1 >= site.group_max}
-              onClick={() => setMembers((l) => [...l, { name: "", whatsapp: "" }])}
+              onClick={() => setMembers((l) => [...l, { name: "", whatsapp: "", k: nextKey.current++ }])}
               className="mt-4 rounded-control border border-line px-4 py-2.5 text-xs font-extrabold tracking-wider uppercase hover:border-accent disabled:opacity-50">
               Add another person
             </button>

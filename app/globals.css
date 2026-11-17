@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+/* ---- ApexTrade Academy design tokens ---- */
+@theme {
+  --color-bg: #050505;
+  --color-surface: #0b0b0c;
+  --color-surface-2: #111214;
+  --color-line: #1a2230;
+  --color-muted: #7c828d;
+  --color-accent: #1fd8a0;
+  --color-danger: #ff5c5c;
+
+  /* Sharp corners: change these two values to adjust roundness site-wide */
+  --radius-card: 2px;
+  --radius-control: 2px;
+
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Soft green glows in the background, like your reference */
+.glow-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(600px circle at 12% 15%, rgba(31, 216, 160, 0.09), transparent 60%),
+    radial-gradient(700px circle at 95% 85%, rgba(31, 216, 160, 0.07), transparent 60%);
+}
+
+:focus-visible {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* ---- Dark (default) and light theme ----
+   The site's colours are variables, so the light theme only has to redefine them.
+   --color-white / --color-black are swapped on purpose: every "text-white" in the code
+   becomes dark text and every "bg-black" input becomes a white box in light mode. */
+:root {
+  --fg: #ffffff;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --fg: #0b0b0c;
+  --color-bg: #f4f6f8;
+  --color-surface: #ffffff;
+  --color-surface-2: #eceff3;
+  --color-line: #d5dbe3;
+  --color-muted: #566070;
+  --color-accent: #0b8f6c;
+  --color-danger: #d02f2f;
+  --color-white: #0b0b0c;
+  --color-black: #ffffff;
+  color-scheme: light;
+}
+
+[data-theme="light"] .glow-bg {
+  background:
+    radial-gradient(600px circle at 12% 15%, rgba(11, 143, 108, 0.07), transparent 60%),
+    radial-gradient(700px circle at 95% 85%, rgba(11, 143, 108, 0.05), transparent 60%);
+}
+
+/* ---- Phase 14: motion ----
+   IMPORTANT: entrance animations use "backwards" fill, never "forwards"/"both". A finished animation that
+   keeps a transform (even an identity one) makes the element the anchor for position:fixed children,
+   which pushed menus and pop-ups off the screen. */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes draw-line {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes grow-candle {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 48px; }
+}
+@keyframes word-in {
+  from { opacity: 0; transform: translateY(0.4em); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.anim-fade-up { animation: fade-up 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; animation-delay: var(--d, 0s); }
+.anim-fade-in { animation: fade-in 0.8s ease backwards; animation-delay: var(--d, 0s); }
+.anim-float { animation: float-y 6s ease-in-out infinite; }
+.anim-glow { animation: pulse-glow 5s ease-in-out infinite; }
+.anim-word { animation: word-in 0.45s ease backwards; }
+.anim-spin { animation: spin 0.8s linear infinite; }
+
+/* Candles grow from their base; the line draws itself. */
+.candle { transform-box: fill-box; transform-origin: center bottom; animation: grow-candle 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; animation-delay: var(--d, 0s); }
+.chart-line { stroke-dasharray: 1; stroke-dashoffset: 1; animation: draw-line 2.6s ease-out 0.4s forwards; }
+
+/* Faint moving grid behind the hero. */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-line) 55%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: drift 6s linear infinite;
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+.marquee-track { display: flex; width: max-content; animation: marquee 38s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+
+/* Scroll reveal: hidden until the element scrolls into view (see components/Reveal.tsx). */
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); transition-delay: var(--d, 0s); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+.lift { transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }
+.lift:hover { transform: translateY(-4px); border-color: var(--color-accent); box-shadow: 0 12px 40px -18px color-mix(in srgb, var(--color-accent) 55%, transparent); }
+
+/* ---- Phase 14.1: admin motion, menus, gold mode ---- */
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes row-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.menu-pop { transform-origin: top right; animation: pop-in 0.16s ease-out; }
+.fade-quick { animation: fade-in 0.15s ease-out; }
+.anim-row { animation: row-in 0.4s ease backwards; animation-delay: var(--d, 0s); }
+.anim-page { animation: page-in 0.35s ease-out backwards; }
+/* Every admin popup (the modals) fades in. */
+.fixed.inset-0.z-50.bg-black\/80 { animation: fade-in 0.18s ease-out; }
+.nav-link:hover span:last-child { transform: scaleX(1); }
+
+/* Easter egg: gold mode (Konami code). */
+[data-gold="1"] { --color-accent: #f5c542; }
+[data-gold="1"][data-theme="light"] { --color-accent: #a87400; }
+[data-gold="1"] .glow-bg {
+  background:
+    radial-gradient(600px circle at 12% 15%, rgba(245, 197, 66, 0.09), transparent 60%),
+    radial-gradient(700px circle at 95% 85%, rgba(245, 197, 66, 0.07), transparent 60%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+  .anim-row, .anim-page, .menu-pop { opacity: 1 !important; transform: none !important; }
+  .reveal, .anim-fade-up, .anim-fade-in, .candle { opacity: 1 !important; transform: none !important; }
+  .chart-line { stroke-dashoffset: 0 !important; }
+}
